@@ -1,0 +1,64 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Production build output
+build/
+dist/
+public/build/
+public/dist/
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Test coverage
+coverage/
+
+# Misc
+.nyc_output/
+.cache/
+.eslintcache
+.prettierignore
+.prettierrc.js
+*.tgz
+*.zip
+*.rar
+*.7z
+*.gz
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# macOS
+.DS_Store
+
+# Windows
+ehthumbs.db
+Thumbs.db
+
+# yarn
+.yarn/
+.pnp.*
+
+# npm
+.npm/
