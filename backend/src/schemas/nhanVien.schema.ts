@@ -1,6 +1,7 @@
 import { ChucVuNhanVien } from "@/models/NhanVien.js";
 import z from "zod";
 
+// Register
 export const CreateNhanVienBodySchema = z.object({
 	HoTenNV: z.string().min(3, "HoTenNV must be at least 3 characters"),
 	Password: z.string().min(6, "Password must be at least 6 characters"),
