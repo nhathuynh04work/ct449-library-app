@@ -1,3 +1,4 @@
+import { NhanVien, type INhanVien } from "@/models/NhanVien.js";
 import "dotenv/config";
 import mongoose from "mongoose";
 
