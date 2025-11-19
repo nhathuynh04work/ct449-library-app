@@ -15,7 +15,8 @@ export async function registerNhanVien(payload: CreateNhanVienPayload) {
 	const newNhanVien = new NhanVien({ ...payload, Password: hashed });
 
 	try {
-		return newNhanVien.save();
+		const savedNhanVien = await newNhanVien.save();
+		return savedNhanVien.toObject();
 	} catch (error: any) {
 		// Duplicate (race condition)
 		if (error.code === 11000) {

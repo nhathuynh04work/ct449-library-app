@@ -1,16 +1,16 @@
 import { Schema, model } from "mongoose";
 import { Counter } from "./Counter.js";
-
-export enum ChucVuNhanVien {
-	LIBRARIAN = "LIBRARIAN",
-	ADMIN = "ADMIN",
-}
+import { GioiTinh, type GioiTinhType } from "@/constants/gioiTinh.js";
+import { ChucVu, type ChucVuType } from "@/constants/chucVu.js";
 
 export interface INhanVien {
 	MSNV: string;
-	HoTenNV: string;
+	HoLot: string;
+	Ten: string;
+	NgaySinh: Date;
+	GioiTinh: GioiTinhType;
 	Password: string;
-	ChucVu: ChucVuNhanVien;
+	ChucVu: ChucVuType;
 	DiaChi: string;
 	SoDienThoai: string;
 }
@@ -22,9 +22,13 @@ const nhanVienSchema = new Schema<INhanVien>(
 			unique: true,
 			index: true,
 		},
-		HoTenNV: {
+		HoLot: { type: String, required: true },
+		Ten: { type: String, required: true },
+		NgaySinh: { type: Date, required: true },
+		GioiTinh: {
 			type: String,
 			required: true,
+			enum: Object.values(GioiTinh),
 		},
 		Password: {
 			type: String,
@@ -34,8 +38,8 @@ const nhanVienSchema = new Schema<INhanVien>(
 		ChucVu: {
 			type: String,
 			required: true,
-			enum: Object.values(ChucVuNhanVien),
-			default: ChucVuNhanVien.LIBRARIAN,
+			enum: Object.values(ChucVu),
+			default: ChucVu.LIBRARIAN,
 		},
 		DiaChi: {
 			type: String,
@@ -49,7 +53,6 @@ const nhanVienSchema = new Schema<INhanVien>(
 	},
 	{ timestamps: true }
 );
-
 nhanVienSchema.pre("save", async function (next) {
 	if (!this.isNew) return next();
 

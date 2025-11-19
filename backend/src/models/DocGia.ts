@@ -1,10 +1,22 @@
 import { Schema, model } from "mongoose";
+import { Counter } from "./Counter.js";
+import { GioiTinh, type GioiTinhType } from "@/constants/gioiTinh.js";
 
-const docGiaSchema = new Schema(
+export interface IDocGia {
+	MSDG: string;
+	HoLot: string;
+	Ten: string;
+	NgaySinh: Date;
+	GioiTinh: GioiTinhType;
+	DiaChi: string;
+	SoDienThoai: string;
+	Password: string;
+}
+
+const docGiaSchema = new Schema<IDocGia>(
 	{
-		MaDocGia: {
+		MSDG: {
 			type: String,
-			required: true,
 			unique: true,
 			index: true,
 		},
@@ -20,21 +32,46 @@ const docGiaSchema = new Schema(
 			type: Date,
 			required: true,
 		},
-		Phai: {
+		GioiTinh: {
 			type: String,
 			required: true,
-			enum: ["Nam", "Nữ", "Khác"],
+			enum: Object.values(GioiTinh),
 		},
 		DiaChi: {
 			type: String,
 			required: true,
 		},
-		DienThoai: {
+		SoDienThoai: {
 			type: String,
 			required: true,
+			unique: true,
+		},
+		Password: {
+			type: String,
+			required: true,
+			select: false,
 		},
 	},
 	{ timestamps: true }
 );
+
+docGiaSchema.pre("save", async function (next) {
+	if (!this.isNew) return next();
+
+	try {
+		const counter = await Counter.findByIdAndUpdate(
+			{ _id: "docGiaId" },
+			{ $inc: { sequence_value: 1 } },
+			{ new: true, upsert: true }
+		);
+
+		const sequenceNumber = String(counter.sequence_value).padStart(6, "0");
+		this.MSDG = `DG${sequenceNumber}`;
+
+		next();
+	} catch (error: any) {
+		next(error);
+	}
+});
 
 export const DocGia = model("DocGia", docGiaSchema);

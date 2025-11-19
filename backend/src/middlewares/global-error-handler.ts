@@ -1,7 +1,7 @@
 import { CustomError } from "@/errors/custom-error.js";
 import logger from "@/utils/logger.js";
 import type { NextFunction, Request, Response } from "express";
-import { flattenError, treeifyError, ZodError } from "zod";
+import { flattenError, ZodError } from "zod";
 
 export function errorHandler(
 	error: any,
