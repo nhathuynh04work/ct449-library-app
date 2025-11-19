@@ -5,6 +5,7 @@ import type {
 	DocGiaLoginPayload,
 	NhanVienLoginPayload,
 } from "@/schemas/auth/login.schema.js";
+import { generateToken, type TokenPayload } from "@/utils/jwt.js";
 import { compare } from "bcrypt";
 import type { Model } from "mongoose";
 
@@ -35,19 +36,37 @@ export async function checkCredentials(params: {
 }
 
 export async function loginNhanVien(payload: NhanVienLoginPayload) {
-	return checkCredentials({
+	const nhanVien = await checkCredentials({
 		Model: NhanVien,
 		identifierField: "MSNV",
 		identifierValue: payload.MSNV,
 		passwordAttempt: payload.Password,
 	});
+
+	const tokenPayload: TokenPayload = {
+		_id: nhanVien._id,
+		identifier: nhanVien.MSNV,
+		role: nhanVien.ChucVu,
+	};
+
+	const token = generateToken(tokenPayload);
+	return { token, MSNV: nhanVien.MSNV };
 }
 
 export async function loginDocGia(payload: DocGiaLoginPayload) {
-	return checkCredentials({
+	const docGia = await checkCredentials({
 		Model: DocGia,
 		identifierField: "MSDG",
 		identifierValue: payload.MSDG,
 		passwordAttempt: payload.Password,
 	});
+
+	const tokenPayload: TokenPayload = {
+		_id: docGia._id,
+		identifier: docGia.MSDG,
+		role: "READER",
+	};
+
+	const token = generateToken(tokenPayload);
+	return { token, MSDG: docGia.MSDG };
 }
