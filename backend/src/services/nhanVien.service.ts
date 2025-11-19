@@ -1,6 +1,6 @@
 import { ConflictException } from "@/errors/conflict.js";
 import { NhanVien } from "@/models/NhanVien.js";
-import type { CreateNhanVienPayload } from "@/schemas/nhanVien.schema.js";
+import type { CreateNhanVienPayload } from "@/schemas/nhanVien/register.schema.js";
 import { hash } from "bcrypt";
 
 export async function registerNhanVien(payload: CreateNhanVienPayload) {

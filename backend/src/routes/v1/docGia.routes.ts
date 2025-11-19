@@ -1,10 +1,10 @@
 import { registerDocGia } from "@/controllers/docGia.controller.js";
 import { validate } from "@/middlewares/validate-request.js";
-import { CreateDocGiaSchema } from "@/schemas/docGia.schema.js";
+import { RegisterDocGiaSchema } from "@/schemas/docGia/register.schema.js";
 import { Router } from "express";
 
 const router = Router();
 
-router.post("/", validate(CreateDocGiaSchema), registerDocGia);
+router.post("/", validate(RegisterDocGiaSchema), registerDocGia);
 
 export default router;

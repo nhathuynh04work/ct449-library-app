@@ -1,6 +1,6 @@
 import { ChucVu, GioiTinh } from "@/constants/index.js";
 import { NhanVien } from "@/models/NhanVien.js";
-import type { CreateNhanVienPayload } from "@/schemas/nhanVien.schema.js";
+import type { RegisterNhanVienPayload } from "@/schemas/nhanVien/register.schema.js";
 import logger from "@/utils/logger.js";
 import { hash } from "bcrypt";
 import "dotenv/config";
@@ -22,7 +22,7 @@ export async function seedAdmin() {
 
 	const hashedPassword = await hash(DEFAULT_PASSWORD, 10);
 
-	const payload: CreateNhanVienPayload = {
+	const payload: RegisterNhanVienPayload = {
 		HoLot: DEFAULT_HO_LOT,
 		Ten: DEFAULT_TEN,
 		NgaySinh: new Date("2004-06-15"),
