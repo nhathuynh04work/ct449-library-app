@@ -60,7 +60,8 @@ nhanVienSchema.pre("save", async function (next) {
 			{ new: true, upsert: true }
 		);
 
-		this.MSNV = `NV${counter.sequence_value}`;
+		const sequenceNumber = String(counter.sequence_value).padStart(6, "0");
+		this.MSNV = `NV${sequenceNumber}`;
 		next();
 	} catch (error: any) {
 		next(error);
