@@ -1,32 +1,47 @@
 import { Schema, model } from "mongoose";
+import { Counter } from "./Counter.js";
+import type { ITacGia } from "./TacGia.js";
+import type { IDanhMucSach } from "./DanhMucSach.js";
+import type { INhaXuatBan } from "./NhaXuatBan.js";
 
-const sachSchema = new Schema(
+export interface ISach {
+	maSach: string;
+	tenSach: string;
+	namXuatBan: number;
+
+	tacGia: (Schema.Types.ObjectId | ITacGia)[];
+	danhMuc: Schema.Types.ObjectId | IDanhMucSach;
+	nhaXuatBan: Schema.Types.ObjectId | INhaXuatBan;
+
+	createdAt?: Date;
+	updatedAt?: Date;
+}
+
+const sachSchema = new Schema<ISach>(
 	{
-		MaSach: {
+		maSach: {
 			type: String,
-			required: true,
 			unique: true,
 			index: true,
 		},
-		TenSach: {
+		tenSach: {
 			type: String,
 			required: true,
 		},
-		DonGia: {
+		namXuatBan: {
 			type: Number,
 			required: true,
 		},
-		SoQuyen: {
-			type: Number,
-			required: true,
-			min: 0,
-		},
-		NamXuatBan: {
-			type: Number,
+
+		tacGia: {
+			type: [Schema.Types.ObjectId],
+			ref: "TacGia",
 			required: true,
 		},
-		TacGia: {
-			type: String,
+
+		danhMuc: {
+			type: Schema.Types.ObjectId,
+			ref: "DanhMucSach",
 			required: true,
 		},
 		nhaXuatBan: {
@@ -37,5 +52,23 @@ const sachSchema = new Schema(
 	},
 	{ timestamps: true }
 );
+
+sachSchema.pre("save", async function (next) {
+	if (!this.isNew) return next();
+
+	try {
+		const counter = await Counter.findByIdAndUpdate(
+			{ _id: "sachId" },
+			{ $inc: { sequence_value: 1 } },
+			{ new: true, upsert: true }
+		);
+
+		const sequenceNumber = String(counter.sequence_value).padStart(6, "0");
+		this.maSach = `SACH${sequenceNumber}`;
+		next();
+	} catch (error: any) {
+		next(error);
+	}
+});
 
 export const Sach = model("Sach", sachSchema);

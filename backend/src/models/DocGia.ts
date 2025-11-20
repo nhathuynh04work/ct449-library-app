@@ -3,50 +3,53 @@ import { Counter } from "./Counter.js";
 import { GioiTinh, type GioiTinhType } from "@/constants/gioiTinh.js";
 
 export interface IDocGia {
-	MSDG: string;
-	HoLot: string;
-	Ten: string;
-	NgaySinh: Date;
-	GioiTinh: GioiTinhType;
-	DiaChi: string;
-	SoDienThoai: string;
-	Password: string;
+	maDocGia: string;
+	hoLot: string;
+	ten: string;
+	ngaySinh: Date;
+	gioiTinh: GioiTinhType;
+	matKhau: string;
+	diaChi: string;
+	soDienThoai: string;
+
+	createdAt?: Date;
+	updatedAt?: Date;
 }
 
 const docGiaSchema = new Schema<IDocGia>(
 	{
-		MSDG: {
+		maDocGia: {
 			type: String,
 			unique: true,
 			index: true,
 		},
-		HoLot: {
+		hoLot: {
 			type: String,
 			required: true,
 		},
-		Ten: {
+		ten: {
 			type: String,
 			required: true,
 		},
-		NgaySinh: {
+		ngaySinh: {
 			type: Date,
 			required: true,
 		},
-		GioiTinh: {
+		gioiTinh: {
 			type: String,
 			required: true,
 			enum: Object.values(GioiTinh),
 		},
-		DiaChi: {
+		diaChi: {
 			type: String,
 			required: true,
 		},
-		SoDienThoai: {
+		soDienThoai: {
 			type: String,
 			required: true,
 			unique: true,
 		},
-		Password: {
+		matKhau: {
 			type: String,
 			required: true,
 			select: false,
@@ -66,7 +69,7 @@ docGiaSchema.pre("save", async function (next) {
 		);
 
 		const sequenceNumber = String(counter.sequence_value).padStart(6, "0");
-		this.MSDG = `DG${sequenceNumber}`;
+		this.maDocGia = `DG${sequenceNumber}`;
 
 		next();
 	} catch (error: any) {

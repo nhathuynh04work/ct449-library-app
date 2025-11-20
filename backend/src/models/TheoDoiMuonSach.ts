@@ -1,6 +1,18 @@
 import { Schema, model } from "mongoose";
+import type { IDocGia } from "./DocGia.js";
+import type { IBanSao } from "./BanSao.js";
 
-const theoDoiMuonSachSchema = new Schema(
+export interface ITheoDoiMuonSach {
+	docGia: Schema.Types.ObjectId | IDocGia;
+	banSao: Schema.Types.ObjectId | IBanSao;
+	ngayMuon: Date;
+	ngayTra?: Date | null;
+
+	createdAt?: Date;
+	updatedAt?: Date;
+}
+
+const theoDoiMuonSachSchema = new Schema<ITheoDoiMuonSach>(
 	{
 		docGia: {
 			type: Schema.Types.ObjectId,
@@ -8,18 +20,18 @@ const theoDoiMuonSachSchema = new Schema(
 			required: true,
 			index: true,
 		},
-		sach: {
+		banSao: {
 			type: Schema.Types.ObjectId,
-			ref: "Sach",
+			ref: "BanSao",
 			required: true,
 			index: true,
 		},
-		NgayMuon: {
+		ngayMuon: {
 			type: Date,
 			required: true,
 			default: Date.now,
 		},
-		NgayTra: {
+		ngayTra: {
 			type: Date,
 			default: null,
 		},
@@ -27,4 +39,7 @@ const theoDoiMuonSachSchema = new Schema(
 	{ timestamps: true }
 );
 
-export const TheoDoiMuonSach = model("TheoDoiMuonSach", theoDoiMuonSachSchema);
+export const TheoDoiMuonSach = model<ITheoDoiMuonSach>(
+	"TheoDoiMuonSach",
+	theoDoiMuonSachSchema
+);

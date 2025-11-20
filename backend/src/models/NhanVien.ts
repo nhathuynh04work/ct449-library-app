@@ -4,48 +4,51 @@ import { GioiTinh, type GioiTinhType } from "@/constants/gioiTinh.js";
 import { ChucVu, type ChucVuType } from "@/constants/chucVu.js";
 
 export interface INhanVien {
-	MSNV: string;
-	HoLot: string;
-	Ten: string;
-	NgaySinh: Date;
-	GioiTinh: GioiTinhType;
-	Password: string;
-	ChucVu: ChucVuType;
-	DiaChi: string;
-	SoDienThoai: string;
+	maNhanVien: string;
+	hoLot: string;
+	ten: string;
+	ngaySinh: Date;
+	gioiTinh: GioiTinhType;
+	matKhau: string;
+	chucVu: ChucVuType;
+	diaChi: string;
+	soDienThoai: string;
+
+	createdAt?: Date;
+	updatedAt?: Date;
 }
 
 const nhanVienSchema = new Schema<INhanVien>(
 	{
-		MSNV: {
+		maNhanVien: {
 			type: String,
 			unique: true,
 			index: true,
 		},
-		HoLot: { type: String, required: true },
-		Ten: { type: String, required: true },
-		NgaySinh: { type: Date, required: true },
-		GioiTinh: {
+		hoLot: { type: String, required: true },
+		ten: { type: String, required: true },
+		ngaySinh: { type: Date, required: true },
+		gioiTinh: {
 			type: String,
 			required: true,
 			enum: Object.values(GioiTinh),
 		},
-		Password: {
+		matKhau: {
 			type: String,
 			required: true,
 			select: false,
 		},
-		ChucVu: {
+		chucVu: {
 			type: String,
 			required: true,
 			enum: Object.values(ChucVu),
 			default: ChucVu.LIBRARIAN,
 		},
-		DiaChi: {
+		diaChi: {
 			type: String,
 			required: true,
 		},
-		SoDienThoai: {
+		soDienThoai: {
 			type: String,
 			required: true,
 			unique: true,
@@ -64,7 +67,7 @@ nhanVienSchema.pre("save", async function (next) {
 		);
 
 		const sequenceNumber = String(counter.sequence_value).padStart(6, "0");
-		this.MSNV = `NV${sequenceNumber}`;
+		this.maNhanVien = `NV${sequenceNumber}`;
 		next();
 	} catch (error: any) {
 		next(error);

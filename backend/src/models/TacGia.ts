@@ -1,52 +1,52 @@
 import { Schema, model } from "mongoose";
 import { Counter } from "./Counter.js";
 
-export interface INhaXuatBan {
-	maNhaXuatBan: string;
-	tenNhaXuatBan: string;
-	diaChi: string;
+export interface ITacGia {
+	maTacGia: string;
+	tenTacGia: string;
+	tieuSu?: string;
     
 	createdAt?: Date;
 	updatedAt?: Date;
 }
 
-const nhaXuatBanSchema = new Schema<INhaXuatBan>(
+const tacGiaSchema = new Schema<ITacGia>(
 	{
-		maNhaXuatBan: {
+		maTacGia: {
 			type: String,
 			unique: true,
 			index: true,
 		},
-		tenNhaXuatBan: {
+		tenTacGia: {
 			type: String,
 			required: true,
 			unique: true,
 		},
-		diaChi: {
+		tieuSu: {
 			type: String,
-			required: true,
+			required: false,
 		},
 	},
 	{ timestamps: true }
 );
 
-nhaXuatBanSchema.pre("save", async function (next) {
+tacGiaSchema.pre("save", async function (next) {
 	if (!this.isNew) return next();
 
 	try {
 		const counter = await Counter.findByIdAndUpdate(
-			{ _id: "nhaXuatBanId" },
+			{ _id: "tacGiaId" },
 			{ $inc: { sequence_value: 1 } },
 			{ new: true, upsert: true }
 		);
 
 		const sequenceNumber = String(counter.sequence_value).padStart(6, "0");
 
-		this.maNhaXuatBan = `NXB${sequenceNumber}`;
+		this.maTacGia = `TG${sequenceNumber}`;
 		next();
 	} catch (error: any) {
 		next(error);
 	}
 });
 
-export const NhaXuatBan = model("NhaXuatBan", nhaXuatBanSchema);
+export const TacGia = model("TacGia", tacGiaSchema);

@@ -1,52 +1,47 @@
 import { Schema, model } from "mongoose";
 import { Counter } from "./Counter.js";
 
-export interface INhaXuatBan {
-	maNhaXuatBan: string;
-	tenNhaXuatBan: string;
-	diaChi: string;
+export interface IDanhMucSach {
+	maDanhMuc: string;
+	tenDanhMuc: string;
     
 	createdAt?: Date;
 	updatedAt?: Date;
 }
 
-const nhaXuatBanSchema = new Schema<INhaXuatBan>(
+const danhMucSachSchema = new Schema<IDanhMucSach>(
 	{
-		maNhaXuatBan: {
+		maDanhMuc: {
 			type: String,
 			unique: true,
 			index: true,
 		},
-		tenNhaXuatBan: {
+		tenDanhMuc: {
 			type: String,
 			required: true,
 			unique: true,
-		},
-		diaChi: {
-			type: String,
-			required: true,
 		},
 	},
 	{ timestamps: true }
 );
 
-nhaXuatBanSchema.pre("save", async function (next) {
+danhMucSachSchema.pre("save", async function (next) {
 	if (!this.isNew) return next();
 
 	try {
 		const counter = await Counter.findByIdAndUpdate(
-			{ _id: "nhaXuatBanId" },
+			{ _id: "danhMucSachId" },
 			{ $inc: { sequence_value: 1 } },
 			{ new: true, upsert: true }
 		);
 
 		const sequenceNumber = String(counter.sequence_value).padStart(6, "0");
 
-		this.maNhaXuatBan = `NXB${sequenceNumber}`;
+		this.maDanhMuc = `DM${sequenceNumber}`;
 		next();
 	} catch (error: any) {
 		next(error);
 	}
 });
 
-export const NhaXuatBan = model("NhaXuatBan", nhaXuatBanSchema);
+export const DanhMucSach = model("DanhMucSach", danhMucSachSchema);
