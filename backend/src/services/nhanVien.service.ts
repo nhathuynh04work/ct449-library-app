@@ -1,18 +1,18 @@
 import { ConflictException } from "@/errors/conflict.js";
 import { NhanVien } from "@/models/NhanVien.js";
-import type { CreateNhanVienPayload } from "@/schemas/nhanVien/register.schema.js";
+import type { RegisterNhanVienPayload } from "@/schemas/nhanVien/register.schema.js";
 import { hash } from "bcrypt";
 
-export async function registerNhanVien(payload: CreateNhanVienPayload) {
+export async function registerNhanVien(payload: RegisterNhanVienPayload) {
 	const existingByPhone = await NhanVien.findOne({
-		SoDienThoai: payload.SoDienThoai,
+		SoDienThoai: payload.soDienThoai,
 	});
 
 	if (existingByPhone)
 		throw new ConflictException("This phone number is already in use");
 
-	const hashed = await hash(payload.Password, 10);
-	const newNhanVien = new NhanVien({ ...payload, Password: hashed });
+	const hashed = await hash(payload.matKhau, 10);
+	const newNhanVien = new NhanVien({ ...payload, matKhau: hashed });
 
 	try {
 		const savedNhanVien = await newNhanVien.save();

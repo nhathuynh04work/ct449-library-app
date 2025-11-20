@@ -20,13 +20,13 @@ export async function checkCredentials(params: {
 	const query: Record<string, string> = {};
 	query[identifierField] = identifierValue;
 
-	const user = await Model.findOne(query).select("+Password");
+	const user = await Model.findOne(query).select("+matKhau");
 
 	if (!user) {
 		throw new NotFoundException("Thông tin đăng nhập không hợp lệ.");
 	}
 
-	const isMatch = await compare(passwordAttempt, user.Password);
+	const isMatch = await compare(passwordAttempt, user.matKhau);
 
 	if (!isMatch) {
 		throw new NotFoundException("Thông tin đăng nhập không hợp lệ.");
@@ -38,35 +38,35 @@ export async function checkCredentials(params: {
 export async function loginNhanVien(payload: NhanVienLoginPayload) {
 	const nhanVien = await checkCredentials({
 		Model: NhanVien,
-		identifierField: "MSNV",
-		identifierValue: payload.MSNV,
-		passwordAttempt: payload.Password,
+		identifierField: "maNhanVien",
+		identifierValue: payload.maNhanVien,
+		passwordAttempt: payload.matKhau,
 	});
 
 	const tokenPayload: TokenPayload = {
 		_id: nhanVien._id,
-		identifier: nhanVien.MSNV,
-		role: nhanVien.ChucVu,
+		identifier: nhanVien.maNhanVien,
+		role: nhanVien.chucVu,
 	};
 
 	const token = generateToken(tokenPayload);
-	return { token, MSNV: nhanVien.MSNV };
+	return { token, maNhanVien: nhanVien.maNhanVien };
 }
 
 export async function loginDocGia(payload: DocGiaLoginPayload) {
 	const docGia = await checkCredentials({
 		Model: DocGia,
-		identifierField: "MSDG",
-		identifierValue: payload.MSDG,
-		passwordAttempt: payload.Password,
+		identifierField: "maDocGia",
+		identifierValue: payload.maDocGia,
+		passwordAttempt: payload.matKhau,
 	});
 
 	const tokenPayload: TokenPayload = {
 		_id: docGia._id,
-		identifier: docGia.MSDG,
+		identifier: docGia.maDocGia,
 		role: "READER",
 	};
 
 	const token = generateToken(tokenPayload);
-	return { token, MSDG: docGia.MSDG };
+	return { token, maDocGia: docGia.maDocGia };
 }

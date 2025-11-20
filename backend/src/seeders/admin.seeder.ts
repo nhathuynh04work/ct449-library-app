@@ -23,20 +23,20 @@ export async function seedAdmin() {
 	const hashedPassword = await hash(DEFAULT_PASSWORD, 10);
 
 	const payload: RegisterNhanVienPayload = {
-		HoLot: DEFAULT_HO_LOT,
-		Ten: DEFAULT_TEN,
-		NgaySinh: new Date("2004-06-15"),
-		GioiTinh: GioiTinh.NAM,
-		Password: hashedPassword,
-		DiaChi: "9999 Central Admin Address",
-		SoDienThoai: DEFAULT_PHONE_CHECK,
-		ChucVu: ChucVu.ADMIN,
+		hoLot: DEFAULT_HO_LOT,
+		ten: DEFAULT_TEN,
+		ngaySinh: new Date("2004-06-15"),
+		gioiTinh: GioiTinh.NAM,
+		matKhau: hashedPassword,
+		diaChi: "9999 Central Admin Address",
+		soDienThoai: DEFAULT_PHONE_CHECK,
+		chucVu: ChucVu.ADMIN,
 	};
 
 	try {
 		const newAdmin = new NhanVien(payload);
 		await newAdmin.save();
-		logger.info(`Admin account created! MSNV: ${newAdmin.MSNV}`);
+		logger.info(`Admin account created! MSNV: ${newAdmin.maNhanVien}`);
 	} catch (e) {
 		logger.error(e, "Failed to seed admin user.");
 	}

@@ -1,18 +1,18 @@
 import { ConflictException } from "@/errors/conflict.js";
 import { DocGia } from "@/models/DocGia.js";
-import type { CreateDocGiaPayload } from "@/schemas/docGia/register.schema.js";
+import type { RegisterDocGiaPayload } from "@/schemas/docGia/register.schema.js";
 import { hash } from "bcrypt";
 
-export async function registerDocGia(payload: CreateDocGiaPayload) {
+export async function registerDocGia(payload: RegisterDocGiaPayload) {
 	const existingByPhone = await DocGia.findOne({
-		SoDienThoai: payload.SoDienThoai,
+		SoDienThoai: payload.soDienThoai,
 	});
 
 	if (existingByPhone)
 		throw new ConflictException("Số điện thoại này đã được sử dụng.");
 
-	const hashed = await hash(payload.Password, 10);
-	const newDocGia = new DocGia({ ...payload, Password: hashed });
+	const hashed = await hash(payload.matKhau, 10);
+	const newDocGia = new DocGia({ ...payload, matKhau: hashed });
 
 	try {
 		const savedDocGia = await newDocGia.save();
