@@ -1,3 +1,4 @@
+import { ErrorCode } from "@/constants/errorCode.js";
 import { CustomError } from "@/errors/custom-error.js";
 import logger from "@/utils/logger.js";
 import type { NextFunction, Request, Response } from "express";
@@ -20,6 +21,15 @@ export function errorHandler(
 		logger.warn(error, "Handled Error");
 		return res.status(error.statusCode).json({
 			error: { message: error.message },
+		});
+	}
+
+	if (error.code === ErrorCode.MONGOOSE_DUPLICATE) {
+		const field = Object.keys(error.keyValue)[0];
+		logger.warn(`Duplicate Key: ${field}`);
+
+		return res.status(409).json({
+			error: { message: `${field} này đã tồn tại.` },
 		});
 	}
 
