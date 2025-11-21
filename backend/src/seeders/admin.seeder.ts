@@ -12,7 +12,7 @@ const DEFAULT_TEN = "Hệ Thống";
 
 export async function seedAdmin() {
 	const existing = await NhanVien.findOne({
-		SoDienThoai: DEFAULT_PHONE_CHECK,
+		soDienThoai: DEFAULT_PHONE_CHECK,
 	});
 
 	if (existing) {

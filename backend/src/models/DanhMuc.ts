@@ -1,7 +1,7 @@
 import { Schema, model } from "mongoose";
 import { Counter } from "./Counter.js";
 
-export interface IDanhMucSach {
+export interface IDanhMuc {
 	maDanhMuc: string;
 	tenDanhMuc: string;
     
@@ -9,7 +9,7 @@ export interface IDanhMucSach {
 	updatedAt?: Date;
 }
 
-const danhMucSachSchema = new Schema<IDanhMucSach>(
+const danhMucSchema = new Schema<IDanhMuc>(
 	{
 		maDanhMuc: {
 			type: String,
@@ -25,12 +25,12 @@ const danhMucSachSchema = new Schema<IDanhMucSach>(
 	{ timestamps: true }
 );
 
-danhMucSachSchema.pre("save", async function (next) {
+danhMucSchema.pre("save", async function (next) {
 	if (!this.isNew) return next();
 
 	try {
 		const counter = await Counter.findByIdAndUpdate(
-			{ _id: "danhMucSachId" },
+			{ _id: "danhMucId" },
 			{ $inc: { sequence_value: 1 } },
 			{ new: true, upsert: true }
 		);
@@ -44,4 +44,4 @@ danhMucSachSchema.pre("save", async function (next) {
 	}
 });
 
-export const DanhMucSach = model("DanhMucSach", danhMucSachSchema);
+export const DanhMuc = model("DanhMuc", danhMucSchema);

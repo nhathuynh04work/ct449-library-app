@@ -5,7 +5,7 @@ import { hash } from "bcrypt";
 
 export async function registerDocGia(payload: RegisterDocGiaPayload) {
 	const existingByPhone = await DocGia.findOne({
-		SoDienThoai: payload.soDienThoai,
+		soDienThoai: payload.soDienThoai,
 	});
 
 	if (existingByPhone)

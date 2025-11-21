@@ -1,7 +1,7 @@
 import { Schema, model } from "mongoose";
 import { Counter } from "./Counter.js";
 import type { ITacGia } from "./TacGia.js";
-import type { IDanhMucSach } from "./DanhMucSach.js";
+import type { IDanhMuc } from "./DanhMuc.js";
 import type { INhaXuatBan } from "./NhaXuatBan.js";
 
 export interface ISach {
@@ -10,7 +10,7 @@ export interface ISach {
 	namXuatBan: number;
 
 	tacGia: (Schema.Types.ObjectId | ITacGia)[];
-	danhMuc: Schema.Types.ObjectId | IDanhMucSach;
+	danhMuc: Schema.Types.ObjectId | IDanhMuc;
 	nhaXuatBan: Schema.Types.ObjectId | INhaXuatBan;
 
 	createdAt?: Date;
@@ -41,7 +41,7 @@ const sachSchema = new Schema<ISach>(
 
 		danhMuc: {
 			type: Schema.Types.ObjectId,
-			ref: "DanhMucSach",
+			ref: "DanhMuc",
 			required: true,
 		},
 		nhaXuatBan: {

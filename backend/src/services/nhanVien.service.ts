@@ -5,7 +5,7 @@ import { hash } from "bcrypt";
 
 export async function registerNhanVien(payload: RegisterNhanVienPayload) {
 	const existingByPhone = await NhanVien.findOne({
-		SoDienThoai: payload.soDienThoai,
+		soDienThoai: payload.soDienThoai,
 	});
 
 	if (existingByPhone)
