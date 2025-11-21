@@ -2,6 +2,7 @@ import { Router } from "express";
 import nhanVienRoutes from "./nhanVien.routes.js";
 import docGiaRoutes from "./docGia.routes.js";
 import danhMucRoutes from "./danhMuc.routes.js";
+import tacGiaRoutes from "./tacGia.routes.js";
 import authRoutes from "./auth.routes.js";
 
 const router = Router();
@@ -9,6 +10,7 @@ const router = Router();
 router.use("/nhanvien", nhanVienRoutes);
 router.use("/docgia", docGiaRoutes);
 router.use("/danhmuc", danhMucRoutes);
+router.use("/tacgia", tacGiaRoutes);
 router.use("/auth", authRoutes);
 
 export default router;
