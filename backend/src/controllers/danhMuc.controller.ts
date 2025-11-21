@@ -8,7 +8,7 @@ export async function getAllDanhMuc(req: Request, res: Response) {
 
     res.status(200).json({
         message: "Lấy danh sách danh mục thành công.",
-        listDanhMuc: listDanhMuc,
+        data: listDanhMuc,
     });
 }
 
