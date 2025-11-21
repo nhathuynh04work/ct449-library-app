@@ -4,6 +4,7 @@ import docGiaRoutes from "./docGia.routes.js";
 import danhMucRoutes from "./danhMuc.routes.js";
 import tacGiaRoutes from "./tacGia.routes.js";
 import nhaXuatBanRoutes from "./nhaXuatBan.routes.js";
+import sachRoutes from "./sach.routes.js";
 import authRoutes from "./auth.routes.js";
 
 const router = Router();
@@ -13,6 +14,7 @@ router.use("/docgia", docGiaRoutes);
 router.use("/danhmuc", danhMucRoutes);
 router.use("/tacgia", tacGiaRoutes);
 router.use("/nhaxuatban", nhaXuatBanRoutes);
+router.use("/sach", sachRoutes);
 router.use("/auth", authRoutes);
 
 export default router;
