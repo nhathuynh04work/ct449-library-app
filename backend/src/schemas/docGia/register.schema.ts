@@ -4,10 +4,16 @@ import z from "zod";
 const RegisterDocGiaBodySchema = z.object({
 	hoLot: z.string().min(1, "Thiếu họ và tên đệm."),
 	ten: z.string().min(1, "Thiếu tên."),
-	ngaySinh: z
-		.string()
-		.pipe(z.coerce.date())
-		.refine((date) => date < new Date(), "Ngày sinh không hợp lệ."),
+	ngaySinh: z.coerce
+		.date({
+			message: "Ngày sinh không hợp lệ.",
+		})
+		.refine((date) => !isNaN(date.getTime()), {
+			message: "Ngày sinh không tồn tại hoặc sai định dạng.",
+		})
+		.refine((date) => date < new Date(), {
+			message: "Ngày sinh phải nhỏ hơn ngày hiện tại.",
+		}),
 	gioiTinh: z.enum(Object.values(GioiTinh), "Thiếu giới tính."),
 	matKhau: z.string().min(8, "Mật khẩu (Password) phải có ít nhất 8 ký tự."),
 	diaChi: z.string().min(5, "Địa chỉ không hợp lệ."),
