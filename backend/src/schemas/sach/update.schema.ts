@@ -6,7 +6,7 @@ const UpdateSachBodySchema = z.object({
 	tenSach: z.string().min(1).optional(),
 	namXuatBan: z.coerce.number().int().optional(),
 	tacGia: z.array(ObjectIdSchema).min(1).optional(),
-	danhMuc: ObjectIdSchema.optional(),
+	danhMuc: z.array(ObjectIdSchema).min(1).optional(),
 	nhaXuatBan: ObjectIdSchema.optional(),
 });
 

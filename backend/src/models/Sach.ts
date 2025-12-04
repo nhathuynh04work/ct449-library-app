@@ -10,7 +10,7 @@ export interface ISach {
 	namXuatBan: number;
 
 	tacGia: (Schema.Types.ObjectId | ITacGia)[];
-	danhMuc: Schema.Types.ObjectId | IDanhMuc;
+	danhMuc: (Schema.Types.ObjectId | IDanhMuc)[];
 	nhaXuatBan: Schema.Types.ObjectId | INhaXuatBan;
 
 	createdAt?: Date;
@@ -40,7 +40,7 @@ const sachSchema = new Schema<ISach>(
 		},
 
 		danhMuc: {
-			type: Schema.Types.ObjectId,
+			type: [Schema.Types.ObjectId],
 			ref: "DanhMuc",
 			required: true,
 		},

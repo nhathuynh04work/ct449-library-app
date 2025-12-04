@@ -7,29 +7,20 @@ export async function createSach(req: Request, res: Response) {
 	const payload = req.body as CreateSachPayload;
 	const newSach = await sachService.createSach(payload);
 
-	res.status(201).json({
-		message: "Tạo sách thành công.",
-		sach: newSach,
-	});
+	res.status(201).json(newSach);
 }
 
 export async function getAllSach(req: Request, res: Response) {
 	const listSach = await sachService.getAllSach();
 
-	res.status(200).json({
-		message: "Lấy danh sách sách thành công.",
-		data: listSach,
-	});
+	res.status(200).json(listSach);
 }
 
 export async function getSachByMa(req: Request, res: Response) {
 	const { maSach } = req.params as { maSach: string };
 	const sach = await sachService.getSachByMa(maSach);
 
-	res.status(200).json({
-		message: "Lấy thông tin sách thành công.",
-		sach: sach,
-	});
+	res.status(200).json(sach);
 }
 
 export async function updateSach(req: Request, res: Response) {
@@ -38,10 +29,7 @@ export async function updateSach(req: Request, res: Response) {
 
 	const updatedSach = await sachService.updateSach(maSach, payload);
 
-	res.status(200).json({
-		message: "Cập nhật sách thành công.",
-		sach: updatedSach,
-	});
+	res.status(200).json(updatedSach);
 }
 
 export async function deleteSach(req: Request, res: Response) {
@@ -49,7 +37,5 @@ export async function deleteSach(req: Request, res: Response) {
 
 	await sachService.deleteSach(maSach);
 
-	res.status(200).json({
-		message: "Xóa sách thành công.",
-	});
+	res.status(204).end();
 }

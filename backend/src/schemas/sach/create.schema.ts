@@ -11,7 +11,9 @@ const CreateSachBodySchema = z.object({
 
 	tacGia: z.array(ObjectIdSchema).min(1, "Sách phải có ít nhất một tác giả."),
 
-	danhMuc: ObjectIdSchema,
+	danhMuc: z
+		.array(ObjectIdSchema)
+		.min(1, "Sách phải thuộc ít nhất một danh mục."),
 	nhaXuatBan: ObjectIdSchema,
 });
 
