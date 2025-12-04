@@ -51,8 +51,7 @@ export async function loginNhanVien(payload: NhanVienLoginPayload) {
 	});
 
 	const tokenPayload: TokenPayload = {
-		_id: nhanVien._id.toString(),
-		identifier: nhanVien.maNhanVien,
+		identifier: nhanVien._id.toString(),
 		role: nhanVien.chucVu,
 	};
 
@@ -70,8 +69,7 @@ export async function loginDocGia(payload: DocGiaLoginPayload) {
 	});
 
 	const tokenPayload: TokenPayload = {
-		_id: docGia._id.toString(),
-		identifier: docGia.maDocGia,
+		identifier: docGia._id.toString(),
 		role: "READER",
 	};
 

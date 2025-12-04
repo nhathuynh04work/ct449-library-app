@@ -8,4 +8,6 @@ export interface Sach {
 
     tacGia: TacGia[];
     danhMuc: DanhMuc[];
+
+    _id: string;
 }

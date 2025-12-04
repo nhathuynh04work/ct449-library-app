@@ -1,7 +1,9 @@
 import { NotFoundException } from "@/errors/not-found.js";
 import { DanhMuc } from "@/models/DanhMuc.js";
-import type { CreateDanhMucPayload } from "@/schemas/danhMuc.schema.js";
-import type { UpdateDanhMucPayload } from "@/schemas/danhMuc/update.schema.js";
+import type {
+	CreateDanhMucPayload,
+	UpdateDanhMucPayload,
+} from "@/schemas/danhMuc.schema.js";
 
 export async function getAllDanhMuc() {
 	return DanhMuc.find().lean();
@@ -12,15 +14,10 @@ export async function createDanhMuc(payload: CreateDanhMucPayload) {
 	return newDanhMuc.toObject();
 }
 
-export async function updateDanhMuc(
-	maDanhMuc: string,
-	payload: UpdateDanhMucPayload
-) {
-	const updatedDanhMuc = await DanhMuc.findOneAndUpdate(
-		{ maDanhMuc: maDanhMuc },
-		payload,
-		{ new: true }
-	);
+export async function updateDanhMuc(id: string, payload: UpdateDanhMucPayload) {
+	const updatedDanhMuc = await DanhMuc.findByIdAndUpdate(id, payload, {
+		new: true,
+	});
 
 	if (!updatedDanhMuc) {
 		throw new NotFoundException("Không tìm thấy danh mục sách.");
@@ -29,10 +26,8 @@ export async function updateDanhMuc(
 	return updatedDanhMuc.toObject();
 }
 
-export async function deleteDanhMuc(maDanhMuc: string) {
-	const deletedDanhMuc = await DanhMuc.findOneAndDelete({
-		maDanhMuc: maDanhMuc,
-	});
+export async function deleteDanhMuc(id: string) {
+	const deletedDanhMuc = await DanhMuc.findByIdAndDelete(id);
 
 	if (!deletedDanhMuc) {
 		throw new NotFoundException("Không tìm thấy danh mục sách.");

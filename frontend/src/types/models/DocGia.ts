@@ -10,4 +10,7 @@ export interface DocGia {
     soDienThoai: string;
     createdAt?: Date;
     updatedAt?: Date;
+
+    _id: string;
+
 }

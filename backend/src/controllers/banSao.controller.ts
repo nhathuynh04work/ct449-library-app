@@ -1,6 +1,9 @@
 import type { Request, Response } from "express";
 import * as banSaoService from "@/services/banSao.service.js";
-import type { CreateBanSaoPayload, UpdateBanSaoPayload } from "@/schemas/banSao.schema.js";
+import type {
+	CreateBanSaoPayload,
+	UpdateBanSaoPayload,
+} from "@/schemas/banSao.schema.js";
 
 export async function createBanSao(req: Request, res: Response) {
 	const payload = req.body as CreateBanSaoPayload;
@@ -15,7 +18,7 @@ export async function getAllBanSao(req: Request, res: Response) {
 	res.status(200).json(listBanSao);
 }
 
-export async function getBanSaoByMa(req: Request, res: Response) {
+export async function getBanSaoById(req: Request, res: Response) {
 	const { id } = req.params as { id: string };
 	const banSao = await banSaoService.getBanSaoById(id);
 
@@ -23,18 +26,18 @@ export async function getBanSaoByMa(req: Request, res: Response) {
 }
 
 export async function updateBanSao(req: Request, res: Response) {
-	const { maBanSao } = req.params as { maBanSao: string };
+	const { id } = req.params as { id: string };
 	const payload = req.body as UpdateBanSaoPayload;
 
-	const updatedBanSao = await banSaoService.updateBanSao(maBanSao, payload);
+	const updatedBanSao = await banSaoService.updateBanSao(id, payload);
 
 	res.status(200).json(updatedBanSao);
 }
 
 export async function deleteBanSao(req: Request, res: Response) {
-	const { maBanSao } = req.params as { maBanSao: string };
+	const { id } = req.params as { id: string };
 
-	await banSaoService.deleteBanSao(maBanSao);
+	await banSaoService.deleteBanSao(id);
 
 	res.status(204).end();
 }

@@ -4,7 +4,6 @@ import "dotenv/config";
 type Role = "READER" | "LIBRARIAN" | "ADMIN";
 
 export interface TokenPayload {
-	_id: string;
 	identifier: string;
 	role: Role;
 }

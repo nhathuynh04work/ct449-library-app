@@ -47,10 +47,8 @@ export async function updateBanSao(
 	return updatedBanSao.toObject();
 }
 
-export async function deleteBanSao(maBanSao: string) {
-	const deletedBanSao = await BanSao.findOneAndDelete({
-		maBanSao: maBanSao,
-	});
+export async function deleteBanSao(banSaoId: string) {
+	const deletedBanSao = await BanSao.findByIdAndDelete(banSaoId);
 
 	if (!deletedBanSao) {
 		throw new NotFoundException("Không tìm thấy bản sao.");

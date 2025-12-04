@@ -15,7 +15,7 @@ export async function createSach(payload: CreateSachPayload) {
 	return newSach.toObject();
 }
 
-export async function getAllSach(): Promise<ISach[]> {
+export async function getAllSach() {
 	const result = await Sach.find()
 		.populate("tacGia danhMuc nhaXuatBan")
 		.lean();
@@ -23,8 +23,8 @@ export async function getAllSach(): Promise<ISach[]> {
 	return result as ISach[];
 }
 
-export async function getSachByMa(maSach: string): Promise<ISach> {
-	const sach = await Sach.findOne({ maSach })
+export async function getSachById(id: string) {
+	const sach = await Sach.findById(id)
 		.populate("tacGia danhMuc nhaXuatBan")
 		.lean();
 
@@ -35,12 +35,10 @@ export async function getSachByMa(maSach: string): Promise<ISach> {
 	return sach as ISach;
 }
 
-export async function updateSach(maSach: string, payload: UpdateSachPayload) {
-	const updatedSach = await Sach.findOneAndUpdate(
-		{ maSach: maSach },
-		payload,
-		{ new: true }
-	);
+export async function updateSach(id: string, payload: UpdateSachPayload) {
+	const updatedSach = await Sach.findByIdAndUpdate(id, payload, {
+		new: true,
+	});
 
 	if (!updatedSach) {
 		throw new NotFoundException("Không tìm thấy sách.");
@@ -49,10 +47,8 @@ export async function updateSach(maSach: string, payload: UpdateSachPayload) {
 	return updatedSach.toObject();
 }
 
-export async function deleteSach(maSach: string) {
-	const deletedSach = await Sach.findOneAndDelete({
-		maSach: maSach,
-	});
+export async function deleteSach(id: string) {
+	const deletedSach = await Sach.findByIdAndDelete(id);
 
 	if (!deletedSach) {
 		throw new NotFoundException("Không tìm thấy sách.");

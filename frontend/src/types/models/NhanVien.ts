@@ -10,4 +10,6 @@ export interface NhanVien {
     chucVu: ChucVu;
     diaChi: string;
     soDienThoai: string;
+
+    _id: string;
 }

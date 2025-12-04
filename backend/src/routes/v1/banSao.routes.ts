@@ -12,7 +12,7 @@ router.post("/", validate(CreateBanSaoSchema), banSaoController.createBanSao);
 
 router.get("/", banSaoController.getAllBanSao);
 
-router.get("/:id", banSaoController.getBanSaoByMa);
+router.get("/:id", banSaoController.getBanSaoById);
 
 router.put("/:id", validate(UpdateBanSaoSchema), banSaoController.updateBanSao);
 

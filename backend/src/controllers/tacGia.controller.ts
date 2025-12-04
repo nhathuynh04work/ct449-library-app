@@ -19,18 +19,18 @@ export async function getAllTacGia(req: Request, res: Response) {
 }
 
 export async function updateTacGia(req: Request, res: Response) {
-	const { maTacGia } = req.params as { maTacGia: string };
+	const { id } = req.params as { id: string };
 	const payload = req.body as UpdateTacGiaPayload;
 
-	const updatedTacGia = await tacGiaService.updateTacGia(maTacGia, payload);
+	const updatedTacGia = await tacGiaService.updateTacGia(id, payload);
 
 	res.status(200).json(updatedTacGia);
 }
 
 export async function deleteTacGia(req: Request, res: Response) {
-	const { maTacGia } = req.params as { maTacGia: string };
+	const { id } = req.params as { id: string };
 
-	await tacGiaService.deleteTacGia(maTacGia);
+	await tacGiaService.deleteTacGia(id);
 
 	res.status(204).end();
 }
