@@ -1,4 +1,5 @@
 import type { DanhMuc } from "./DanhMuc";
+import type { NhaXuatBan } from "./NhaXuatBan";
 import type { TacGia } from "./TacGia";
 
 export interface Sach {
@@ -6,6 +7,7 @@ export interface Sach {
     tenSach: string;
     namXuatBan: number;
 
+    nhaXuatBan: NhaXuatBan;
     tacGia: TacGia[];
     danhMuc: DanhMuc[];
 

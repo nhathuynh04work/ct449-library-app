@@ -7,7 +7,7 @@ export const booksApi = {
         return data;
     },
 
-    delete: async (maSach: string): Promise<void> => {
-        await api.delete(`/sach/${maSach}`);
+    delete: async (id: string): Promise<void> => {
+        await api.delete(`/sach/${id}`);
     },
 };
