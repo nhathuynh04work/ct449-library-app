@@ -1,8 +1,23 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { ArrowLeft, CheckCircle } from "lucide-vue-next";
 import NeoInput from "@/components/ui/NeoInput.vue";
 import NeoButton from "@/components/ui/NeoButton.vue";
-import { ArrowLeft, CheckCircle } from "lucide-vue-next";
+import NeoSelect from "@/components/ui/NeoSelect.vue";
+import { useRegister } from "@/features/auth/mutations";
+import type { RegisterPayload } from "@/features/auth/types";
+import { useToast } from "@/composables/useToast";
+
+const router = useRouter();
+const { mutate, isPending, error } = useRegister();
+const { addToast } = useToast();
+
+const genderOptions = [
+    { value: "Nam", label: "Nam" },
+    { value: "Nữ", label: "Nữ" },
+    { value: "Khác", label: "Khác" },
+];
 
 const form = ref({
     hoLot: "",
@@ -15,8 +30,23 @@ const form = ref({
 });
 
 const handleRegister = () => {
-    console.log("Dữ liệu đăng ký:", form.value);
-    // TODO: Gọi API registerDocGia
+    mutate(form.value as RegisterPayload, {
+        onSuccess: () => {
+            addToast({
+                title: "Thành công!",
+                description: "Đăng ký tài khoản thành công. Vui lòng đăng nhập.",
+                variant: "success",
+            });
+            router.push("/login");
+        },
+        onError: (err) => {
+            addToast({
+                title: "Lỗi",
+                description: err.message || "Đăng ký thất bại",
+                variant: "error",
+            });
+        },
+    });
 };
 </script>
 
@@ -39,7 +69,9 @@ const handleRegister = () => {
             class="w-full max-w-3xl bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] relative z-10"
         >
             <div class="bg-black text-white p-6 flex items-center justify-between">
-                <h1 class="text-3xl font-black uppercase tracking-wider text-yellow-400">
+                <h1
+                    class="text-3xl font-black uppercase tracking-wider text-yellow-400 font-display"
+                >
                     Đăng ký Thẻ
                 </h1>
                 <RouterLink
@@ -56,7 +88,9 @@ const handleRegister = () => {
                     class="grid grid-cols-1 md:grid-cols-12 gap-6"
                 >
                     <div class="md:col-span-8 bg-blue-50 border-2 border-black p-5 shadow-neo-sm">
-                        <h3 class="font-black text-lg mb-4 uppercase flex items-center gap-2">
+                        <h3
+                            class="font-black text-lg mb-4 uppercase flex items-center gap-2 font-display"
+                        >
                             <span
                                 class="bg-blue-500 text-white w-8 h-8 flex items-center justify-center border-2 border-black"
                                 >1</span
@@ -81,24 +115,22 @@ const handleRegister = () => {
                                 type="date"
                                 v-model="form.ngaySinh"
                             />
-                            <div class="flex flex-col gap-1">
-                                <label class="font-bold text-sm ml-1">Giới tính</label>
-                                <select
-                                    v-model="form.gioiTinh"
-                                    class="w-full p-3 border-2 border-black outline-none bg-white focus:shadow-neo-sm h-[52px]"
-                                >
-                                    <option value="Nam">Nam</option>
-                                    <option value="Nữ">Nữ</option>
-                                    <option value="Khác">Khác</option>
-                                </select>
-                            </div>
+
+                            <NeoSelect
+                                id="gender"
+                                label="Giới tính"
+                                v-model="form.gioiTinh"
+                                :options="genderOptions"
+                            />
                         </div>
                     </div>
 
                     <div
                         class="md:col-span-4 bg-pink-50 border-2 border-black p-5 shadow-neo-sm flex flex-col"
                     >
-                        <h3 class="font-black text-lg mb-4 uppercase flex items-center gap-2">
+                        <h3
+                            class="font-black text-lg mb-4 uppercase flex items-center gap-2 font-display"
+                        >
                             <span
                                 class="bg-pink-500 text-white w-8 h-8 flex items-center justify-center border-2 border-black"
                                 >2</span
@@ -114,16 +146,18 @@ const handleRegister = () => {
                         />
 
                         <div
-                            class="mt-4 text-xs font-bold text-gray-500 bg-white p-2 border-2 border-black border-dashed"
+                            class="mt-4 text-xs font-bold text-gray-500 bg-white p-2 border-2 border-black border-dashed font-body"
                         >
-                            * Mật khẩu dùng để đăng nhập vào hệ thống mượn trả sách.
+                            * Mật khẩu dùng để đăng nhập.
                         </div>
                     </div>
 
                     <div
                         class="md:col-span-12 bg-yellow-50 border-2 border-black p-5 shadow-neo-sm"
                     >
-                        <h3 class="font-black text-lg mb-4 uppercase flex items-center gap-2">
+                        <h3
+                            class="font-black text-lg mb-4 uppercase flex items-center gap-2 font-display"
+                        >
                             <span
                                 class="bg-yellow-500 text-white w-8 h-8 flex items-center justify-center border-2 border-black text-black"
                                 >3</span
@@ -141,17 +175,26 @@ const handleRegister = () => {
                                 id="address"
                                 label="Địa chỉ cư trú"
                                 v-model="form.diaChi"
-                                placeholder="Số nhà, tên đường, phường/xã..."
+                                placeholder="Số nhà, tên đường..."
                             />
                         </div>
+                    </div>
+
+                    <div
+                        v-if="error"
+                        class="md:col-span-12 bg-red-100 border-2 border-red-500 text-red-600 p-3 font-bold text-sm font-body"
+                    >
+                        {{ error.message || "Đăng ký thất bại" }}
                     </div>
 
                     <div class="md:col-span-12 mt-4">
                         <NeoButton
                             variant="primary"
-                            class="w-full text-xl py-4 flex justify-center items-center gap-3 hover:bg-green-400"
+                            class="w-full text-xl py-4 flex justify-center items-center gap-3 hover:bg-green-400 font-display"
+                            :disabled="isPending"
                         >
-                            <CheckCircle :size="28" /> HOÀN TẤT ĐĂNG KÝ
+                            <CheckCircle :size="28" />
+                            {{ isPending ? "ĐANG XỬ LÝ..." : "HOÀN TẤT ĐĂNG KÝ" }}
                         </NeoButton>
                     </div>
                 </form>

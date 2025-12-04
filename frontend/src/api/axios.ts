@@ -24,6 +24,21 @@ api.interceptors.response.use(
             localStorage.removeItem("userRole");
             window.location.href = "/login";
         }
+
+        const serverMessage = error.response?.data?.error?.message;
+        const fallbackMessage = error.response?.data?.message || "Lỗi hệ thống không xác định";
+
+        if (serverMessage) {
+            // If it's an object (Zod errors), maybe stringify it or pick the first one
+            if (typeof serverMessage === "object") {
+                error.message = Object.values(serverMessage).flat()?.[0];
+            } else {
+                error.message = serverMessage;
+            }
+        } else {
+            error.message = fallbackMessage;
+        }
+
         return Promise.reject(error);
     },
 );

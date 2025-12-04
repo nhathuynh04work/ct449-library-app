@@ -1,20 +1,44 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import { useRouter } from "vue-router";
 import { User, Library, ArrowRight } from "lucide-vue-next";
 import NeoInput from "@/components/ui/NeoInput.vue";
 import NeoButton from "@/components/ui/NeoButton.vue";
 import Logo from "@/assets/logo.svg";
+import { useLogin } from "@/features/auth/mutations";
+import { useToast } from "@/composables/useToast";
+
+const router = useRouter();
+const { mutate, isPending, error } = useLogin();
 
 const userType = ref<"READER" | "STAFF">("READER");
 const identifier = ref("");
 const password = ref("");
+const { addToast } = useToast();
 
 const handleLogin = () => {
-    console.log(`Đăng nhập với vai trò: ${userType.value}`, {
-        id: identifier.value,
-        pass: password.value,
-    });
-    // TODO: Gọi API đăng nhập
+    mutate(
+        {
+            type: userType.value,
+            payload: { identifier: identifier.value, password: password.value },
+        },
+        {
+            onSuccess: () => {
+                if (userType.value === "READER") {
+                    router.push("/portal/books");
+                } else {
+                    router.push("/admin/dashboard");
+                }
+            },
+            onError: (err) => {
+                addToast({
+                    title: "Lỗi Đăng Nhập",
+                    description: err.message || "Vui lòng kiểm tra lại thông tin.",
+                    variant: "error",
+                });
+            },
+        },
+    );
 };
 </script>
 
@@ -100,8 +124,19 @@ const handleLogin = () => {
                         placeholder="••••••••"
                     />
 
-                    <NeoButton class="w-full mt-4 text-xl py-4" variant="primary">
-                        TRUY CẬP HỆ THỐNG
+                    <div
+                        v-if="error"
+                        class="bg-red-100 border-2 border-red-500 text-red-600 p-3 font-bold text-sm"
+                    >
+                        {{ error.message || "Đăng nhập thất bại" }}
+                    </div>
+
+                    <NeoButton
+                        class="w-full mt-4 text-xl py-4"
+                        variant="primary"
+                        :disabled="isPending"
+                    >
+                        {{ isPending ? "ĐANG XỬ LÝ..." : "TRUY CẬP HỆ THỐNG" }}
                     </NeoButton>
                 </form>
             </div>
