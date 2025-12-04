@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as sachController from "@/controllers/sach.controller.js";
-import { validate } from "@/middlewares/validate-request.js";
+import { validate } from "@/middlewares/validate.middleware.js";
 
 import { CreateSachSchema } from "@/schemas/sach/create.schema.js";
 import { UpdateSachSchema } from "@/schemas/sach/update.schema.js";

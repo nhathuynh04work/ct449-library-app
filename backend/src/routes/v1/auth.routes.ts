@@ -1,5 +1,5 @@
 import { loginDocGia, loginNhanVien } from "@/controllers/auth.controller.js";
-import { validate } from "@/middlewares/validate-request.js";
+import { validate } from "@/middlewares/validate.middleware.js";
 import {
 	DocGiaLoginSchema,
 	NhanVienLoginSchema,

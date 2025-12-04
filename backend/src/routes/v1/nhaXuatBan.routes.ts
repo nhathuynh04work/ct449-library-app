@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as nhaXuatBanController from "@/controllers/nhaXuatBan.controller.js";
-import { validate } from "@/middlewares/validate-request.js";
+import { validate } from "@/middlewares/validate.middleware.js";
 
 import { CreateNhaXuatBanSchema } from "@/schemas/nhaXuatBan/create.schema.js";
 import { UpdateNhaXuatBanSchema } from "@/schemas/nhaXuatBan/update.schema.js";

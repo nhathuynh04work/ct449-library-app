@@ -1,8 +1,10 @@
 import { Schema, model } from "mongoose";
+import { Counter } from "./Counter.js";
 import type { IDocGia } from "./DocGia.js";
 import type { IBanSao } from "./BanSao.js";
 
 export interface ITheoDoiMuonSach {
+	maPhieuMuon: string;
 	docGia: Schema.Types.ObjectId | IDocGia;
 	banSao: Schema.Types.ObjectId | IBanSao;
 	ngayMuon: Date;
@@ -14,6 +16,11 @@ export interface ITheoDoiMuonSach {
 
 const theoDoiMuonSachSchema = new Schema<ITheoDoiMuonSach>(
 	{
+		maPhieuMuon: {
+			type: String,
+			unique: true,
+			index: true,
+		},
 		docGia: {
 			type: Schema.Types.ObjectId,
 			ref: "DocGia",
@@ -38,6 +45,24 @@ const theoDoiMuonSachSchema = new Schema<ITheoDoiMuonSach>(
 	},
 	{ timestamps: true }
 );
+
+theoDoiMuonSachSchema.pre("save", async function (next) {
+	if (!this.isNew) return next();
+
+	try {
+		const counter = await Counter.findByIdAndUpdate(
+			{ _id: "theoDoiMuonSachId" },
+			{ $inc: { sequence_value: 1 } },
+			{ new: true, upsert: true }
+		);
+
+		const sequenceNumber = String(counter.sequence_value).padStart(6, "0");
+		this.maPhieuMuon = `MP${sequenceNumber}`;
+		next();
+	} catch (error: any) {
+		next(error);
+	}
+});
 
 export const TheoDoiMuonSach = model<ITheoDoiMuonSach>(
 	"TheoDoiMuonSach",

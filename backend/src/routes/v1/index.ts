@@ -6,6 +6,7 @@ import tacGiaRoutes from "./tacGia.routes.js";
 import nhaXuatBanRoutes from "./nhaXuatBan.routes.js";
 import sachRoutes from "./sach.routes.js";
 import banSaoRoutes from "./banSao.routes.js";
+import muonTraRoutes from "./muonTra.routes.js";
 import authRoutes from "./auth.routes.js";
 
 const router = Router();
@@ -17,6 +18,7 @@ router.use("/tacgia", tacGiaRoutes);
 router.use("/nhaxuatban", nhaXuatBanRoutes);
 router.use("/sach", sachRoutes);
 router.use("/bansao", banSaoRoutes);
+router.use("/muonTra", muonTraRoutes);
 router.use("/auth", authRoutes);
 
 export default router;

@@ -1,5 +1,5 @@
 import { registerDocGia } from "@/controllers/docGia.controller.js";
-import { validate } from "@/middlewares/validate-request.js";
+import { validate } from "@/middlewares/validate.middleware.js";
 import { RegisterDocGiaSchema } from "@/schemas/docGia/register.schema.js";
 import { Router } from "express";
 

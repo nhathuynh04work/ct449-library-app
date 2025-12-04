@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as banSaoController from "@/controllers/banSao.controller.js";
-import { validate } from "@/middlewares/validate-request.js";
+import { validate } from "@/middlewares/validate.middleware.js";
 
 import { CreateBanSaoSchema } from "@/schemas/banSao/create.schema.js";
 import { UpdateBanSaoSchema } from "@/schemas/banSao/update.schema.js";

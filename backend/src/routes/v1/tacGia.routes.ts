@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as tacGiaController from "@/controllers/tacGia.controller.js";
-import { validate } from "@/middlewares/validate-request.js";
+import { validate } from "@/middlewares/validate.middleware.js";
 
 import { CreateTacGiaSchema } from "@/schemas/tacGia/create.schema.js";
 import { UpdateTacGiaSchema } from "@/schemas/tacGia/update.schema.js";

@@ -1,5 +1,5 @@
 import * as danhMucController from "@/controllers/danhMuc.controller.js";
-import { validate } from "@/middlewares/validate-request.js";
+import { validate } from "@/middlewares/validate.middleware.js";
 import { CreateDanhMucSchema } from "@/schemas/danhMuc/create.schema.js";
 import { DeleteDanhMucSchema } from "@/schemas/danhMuc/delete.schema.js";
 import { UpdateDanhMucSchema } from "@/schemas/danhMuc/update.schema.js";
