@@ -1,5 +1,5 @@
 import { NhanVien } from "@/models/NhanVien.js";
-import type { RegisterNhanVienPayload } from "@/schemas/nhanVien/register.schema.js";
+import type { RegisterNhanVienPayload } from "@/schemas/nhanVien.schema.js";
 import { hash } from "bcrypt";
 
 export async function registerNhanVien(payload: RegisterNhanVienPayload) {

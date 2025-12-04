@@ -1,7 +1,14 @@
+import { TrangThaiBanSao } from "@/constants/trangThaiBanSao.js";
+import { ConflictException } from "@/errors/conflict.js";
 import { NotFoundException } from "@/errors/not-found.js";
+import { BanSao } from "@/models/BanSao.js";
 import { Sach, type ISach } from "@/models/Sach.js";
-import type { CreateSachPayload } from "@/schemas/sach/create.schema.js";
-import type { UpdateSachPayload } from "@/schemas/sach/update.schema.js";
+import { TheoDoiMuonSach } from "@/models/TheoDoiMuonSach.js";
+import type {
+	CreateSachPayload,
+	UpdateSachPayload,
+} from "@/schemas/sach.schema.js";
+import mongoose from "mongoose";
 
 export async function createSach(payload: CreateSachPayload) {
 	const newSach = await Sach.create(payload);
@@ -9,11 +16,11 @@ export async function createSach(payload: CreateSachPayload) {
 }
 
 export async function getAllSach(): Promise<ISach[]> {
-    const result = await Sach.find()
-        .populate("tacGia danhMuc nhaXuatBan")
-        .lean();
+	const result = await Sach.find()
+		.populate("tacGia danhMuc nhaXuatBan")
+		.lean();
 
-    return result as ISach[]; 
+	return result as ISach[];
 }
 
 export async function getSachByMa(maSach: string): Promise<ISach> {
@@ -52,4 +59,49 @@ export async function deleteSach(maSach: string) {
 	}
 
 	return deletedSach.toObject();
+}
+
+export async function muonSach(params: { docGiaId: string; sachId: string }) {
+	const { docGiaId, sachId } = params;
+	const session = await mongoose.startSession();
+	session.startTransaction();
+
+	try {
+		const banSao = await BanSao.findOneAndUpdate(
+			{
+				sach: sachId,
+				trangThai: TrangThaiBanSao.AVAILABLE,
+			},
+			{
+				trangThai: TrangThaiBanSao.BORROWED,
+			},
+			{ new: true, session: session }
+		);
+
+		if (!banSao) {
+			throw new ConflictException(
+				"Sách này hiện đã hết bản sao có sẵn để mượn."
+			);
+		}
+
+		const phieuMuon = new TheoDoiMuonSach({
+			docGia: docGiaId,
+			banSao: banSao._id,
+			ngayMuon: new Date(),
+		});
+
+		await phieuMuon.save({ session });
+
+		await session.commitTransaction();
+
+		return {
+			...phieuMuon.toObject(),
+			maBanSao: banSao.maBanSao,
+		};
+	} catch (error) {
+		await session.abortTransaction();
+		throw error;
+	} finally {
+		session.endSession();
+	}
 }

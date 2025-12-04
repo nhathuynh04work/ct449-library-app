@@ -1,48 +1,44 @@
 import { NotFoundException } from "@/errors/not-found.js";
-import { BanSao, type IBanSao } from "@/models/BanSao.js";
-import type { CreateBanSaoPayload } from "@/schemas/banSao/create.schema.js";
-import type { UpdateBanSaoPayload } from "@/schemas/banSao/update.schema.js";
+import { BanSao } from "@/models/BanSao.js";
+import type {
+	CreateBanSaoPayload,
+	UpdateBanSaoPayload,
+} from "@/schemas/banSao.schema.js";
 
 export async function createBanSao(payload: CreateBanSaoPayload) {
 	const newBanSao = await BanSao.create(payload);
 	return newBanSao.toObject();
 }
 
-export async function getAllBanSao(): Promise<IBanSao[]> {
-	const listBanSao = await BanSao.find()
-		.populate({
-			path: "sach",
-			populate: { path: "tacGia danhMuc nhaXuatBan" },
-		})
-		.lean();
+export async function getAllBanSao() {
+	const listBanSao = await BanSao.find().populate({
+		path: "sach",
+		populate: { path: "tacGia danhMuc nhaXuatBan" },
+	});
 
-	return listBanSao as IBanSao[];
+	return listBanSao;
 }
 
-export async function getBanSaoByMa(maBanSao: string): Promise<IBanSao> {
-	const banSao = await BanSao.findOne({ maBanSao })
-		.populate({
-			path: "sach",
-			populate: { path: "tacGia danhMuc nhaXuatBan" },
-		})
-		.lean();
+export async function getBanSaoById(banSaoId: string) {
+	const banSao = await BanSao.findById(banSaoId).populate({
+		path: "sach",
+		populate: { path: "tacGia danhMuc nhaXuatBan" },
+	});
 
 	if (!banSao) {
 		throw new NotFoundException("Không tìm thấy bản sao.");
 	}
 
-	return banSao as IBanSao;
+	return banSao;
 }
 
 export async function updateBanSao(
-	maBanSao: string,
+	banSaoId: string,
 	payload: UpdateBanSaoPayload
 ) {
-	const updatedBanSao = await BanSao.findOneAndUpdate(
-		{ maBanSao: maBanSao },
-		payload,
-		{ new: true }
-	);
+	const updatedBanSao = await BanSao.findByIdAndUpdate(banSaoId, payload, {
+		new: true,
+	});
 
 	if (!updatedBanSao) {
 		throw new NotFoundException("Không tìm thấy bản sao.");

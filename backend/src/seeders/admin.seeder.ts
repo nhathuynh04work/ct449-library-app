@@ -1,6 +1,6 @@
 import { ChucVu, GioiTinh } from "@/constants/index.js";
 import { NhanVien } from "@/models/NhanVien.js";
-import type { RegisterNhanVienPayload } from "@/schemas/nhanVien/register.schema.js";
+import type { RegisterNhanVienPayload } from "@/schemas/nhanVien.schema.js";
 import logger from "@/utils/logger.js";
 import { hash } from "bcrypt";
 import "dotenv/config";

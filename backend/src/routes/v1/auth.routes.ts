@@ -3,7 +3,7 @@ import { validate } from "@/middlewares/validate.middleware.js";
 import {
 	DocGiaLoginSchema,
 	NhanVienLoginSchema,
-} from "@/schemas/auth/login.schema.js";
+} from "@/schemas/auth.schema.js";
 import { Router } from "express";
 
 const router = Router();

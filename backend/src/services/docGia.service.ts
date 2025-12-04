@@ -1,5 +1,5 @@
 import { DocGia } from "@/models/DocGia.js";
-import type { RegisterDocGiaPayload } from "@/schemas/docGia/register.schema.js";
+import type { RegisterDocGiaPayload } from "@/schemas/docGia.schema.js";
 import { hash } from "bcrypt";
 
 export async function registerDocGia(payload: RegisterDocGiaPayload) {

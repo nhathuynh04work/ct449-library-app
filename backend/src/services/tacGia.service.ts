@@ -1,6 +1,6 @@
 import { NotFoundException } from "@/errors/not-found.js";
 import { TacGia } from "@/models/TacGia.js";
-import type { CreateTacGiaPayload } from "@/schemas/tacGia/create.schema.js";
+import type { CreateTacGiaPayload } from "@/schemas/tacGia.schema.js";
 import type { UpdateTacGiaPayload } from "@/schemas/tacGia/update.schema.js";
 
 export async function createTacGia(payload: CreateTacGiaPayload) {

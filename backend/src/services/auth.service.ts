@@ -4,7 +4,7 @@ import { NhanVien, type INhanVien } from "@/models/NhanVien.js";
 import type {
 	DocGiaLoginPayload,
 	NhanVienLoginPayload,
-} from "@/schemas/auth/login.schema.js";
+} from "@/schemas/auth.schema.js";
 import { generateToken, type TokenPayload } from "@/utils/jwt.js";
 import { compare } from "bcrypt";
 import type { FilterQuery, Model } from "mongoose";

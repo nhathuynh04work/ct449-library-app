@@ -2,9 +2,7 @@ import { Router } from "express";
 import * as sachController from "@/controllers/sach.controller.js";
 import { validate } from "@/middlewares/validate.middleware.js";
 
-import { CreateSachSchema } from "@/schemas/sach/create.schema.js";
-import { UpdateSachSchema } from "@/schemas/sach/update.schema.js";
-import { DeleteSachSchema } from "@/schemas/sach/delete.schema.js";
+import { CreateSachSchema, UpdateSachSchema } from "@/schemas/sach.schema.js";
 
 const router = Router();
 
@@ -12,14 +10,12 @@ router.post("/", validate(CreateSachSchema), sachController.createSach);
 
 router.get("/", sachController.getAllSach);
 
-router.get("/:maSach", sachController.getSachByMa);
+router.get("/:id", sachController.getSachByMa);
 
-router.put("/:maSach", validate(UpdateSachSchema), sachController.updateSach);
+router.put("/:id", validate(UpdateSachSchema), sachController.updateSach);
 
-router.delete(
-	"/:maSach",
-	validate(DeleteSachSchema),
-	sachController.deleteSach
-);
+router.delete("/:id", sachController.deleteSach);
+
+router.post("/:id/muon", )
 
 export default router;

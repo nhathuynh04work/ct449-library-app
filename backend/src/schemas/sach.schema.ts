@@ -1,6 +1,7 @@
 import z from "zod";
-import { ObjectIdSchema } from "../common/objectId.schema.js";
+import { ObjectIdSchema } from "./common.schema.js";
 
+// Create
 const CreateSachBodySchema = z.object({
 	tenSach: z.string().min(1, "Tên sách không được để trống."),
 	namXuatBan: z.coerce
@@ -22,3 +23,18 @@ export const CreateSachSchema = z.object({
 });
 
 export type CreateSachPayload = z.infer<typeof CreateSachBodySchema>;
+
+// Update
+const UpdateSachBodySchema = z.object({
+	tenSach: z.string().min(1).optional(),
+	namXuatBan: z.coerce.number().int().optional(),
+	tacGia: z.array(ObjectIdSchema).min(1).optional(),
+	danhMuc: z.array(ObjectIdSchema).min(1).optional(),
+	nhaXuatBan: ObjectIdSchema.optional(),
+});
+
+export const UpdateSachSchema = z.object({
+	body: UpdateSachBodySchema,
+});
+
+export type UpdateSachPayload = z.infer<typeof UpdateSachBodySchema>;

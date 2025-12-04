@@ -1,6 +1,6 @@
 import { NotFoundException } from "@/errors/not-found.js";
 import { NhaXuatBan } from "@/models/NhaXuatBan.js";
-import type { CreateNhaXuatBanPayload } from "@/schemas/nhaXuatBan/create.schema.js";
+import type { CreateNhaXuatBanPayload } from "@/schemas/nhaXuatBan.schema.js";
 import type { UpdateNhaXuatBanPayload } from "@/schemas/nhaXuatBan/update.schema.js";
 
 export async function createNhaXuatBan(payload: CreateNhaXuatBanPayload) {

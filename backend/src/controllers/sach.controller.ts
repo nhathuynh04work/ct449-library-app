@@ -1,7 +1,9 @@
 import type { Request, Response } from "express";
 import * as sachService from "@/services/sach.service.js";
-import type { CreateSachPayload } from "@/schemas/sach/create.schema.js";
-import type { UpdateSachPayload } from "@/schemas/sach/update.schema.js";
+import type {
+	CreateSachPayload,
+	UpdateSachPayload,
+} from "@/schemas/sach.schema.js";
 
 export async function createSach(req: Request, res: Response) {
 	const payload = req.body as CreateSachPayload;
@@ -38,4 +40,14 @@ export async function deleteSach(req: Request, res: Response) {
 	await sachService.deleteSach(maSach);
 
 	res.status(204).end();
+}
+
+export async function muonSach(req: Request, res: Response) {
+	const sachId = req.params.id as string;
+	const result = await sachService.muonSach({
+		docGiaId: req.user.identifier,
+		sachId,
+	});
+
+	res.status(201).json(result);
 }

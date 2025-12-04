@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
 import * as banSaoService from "@/services/banSao.service.js";
-import type { CreateBanSaoPayload } from "@/schemas/banSao/create.schema.js";
-import type { UpdateBanSaoPayload } from "@/schemas/banSao/update.schema.js";
+import type { CreateBanSaoPayload, UpdateBanSaoPayload } from "@/schemas/banSao.schema.js";
 
 export async function createBanSao(req: Request, res: Response) {
 	const payload = req.body as CreateBanSaoPayload;
@@ -17,8 +16,8 @@ export async function getAllBanSao(req: Request, res: Response) {
 }
 
 export async function getBanSaoByMa(req: Request, res: Response) {
-	const { maBanSao } = req.params as { maBanSao: string };
-	const banSao = await banSaoService.getBanSaoByMa(maBanSao);
+	const { id } = req.params as { id: string };
+	const banSao = await banSaoService.getBanSaoById(id);
 
 	res.status(200).json(banSao);
 }

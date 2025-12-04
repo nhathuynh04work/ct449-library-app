@@ -1,6 +1,6 @@
 import { NotFoundException } from "@/errors/not-found.js";
 import { DanhMuc } from "@/models/DanhMuc.js";
-import type { CreateDanhMucPayload } from "@/schemas/danhMuc/create.schema.js";
+import type { CreateDanhMucPayload } from "@/schemas/danhMuc.schema.js";
 import type { UpdateDanhMucPayload } from "@/schemas/danhMuc/update.schema.js";
 
 export async function getAllDanhMuc() {
