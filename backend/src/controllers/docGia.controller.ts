@@ -5,8 +5,5 @@ export async function registerDocGia(req: Request, res: Response) {
 	const newDocGia = await docGiaService.registerDocGia(req.body);
 
 	const { matKhau, ...rest } = newDocGia;
-	res.status(201).json({
-		message: "Đăng ký tài khoản độc giả thành công.",
-		docGia: rest,
-	});
+	res.status(201).json(rest);
 }

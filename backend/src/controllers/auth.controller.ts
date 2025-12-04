@@ -7,10 +7,7 @@ export async function loginDocGia(req: Request, res: Response) {
 
 	logger.info(`Độc giả đăng nhập thành công: MSDG ${maDocGia}`);
 
-	res.status(201).json({
-		message: "Đăng nhập độc giả thành công.",
-		token: token,
-	});
+	res.status(201).json(token);
 }
 
 export async function loginNhanVien(req: Request, res: Response) {
@@ -18,8 +15,5 @@ export async function loginNhanVien(req: Request, res: Response) {
 
 	logger.info(`Nhân viên đăng nhập thành công: MSNV ${maNhanVien}`);
 
-	res.status(201).json({
-		message: "Đăng nhập nhân viên thành công.",
-		token: token,
-	});
+	res.status(201).json(token);
 }

@@ -7,29 +7,20 @@ export async function createBanSao(req: Request, res: Response) {
 	const payload = req.body as CreateBanSaoPayload;
 	const newBanSao = await banSaoService.createBanSao(payload);
 
-	res.status(201).json({
-		message: "Tạo bản sao thành công.",
-		banSao: newBanSao,
-	});
+	res.status(201).json(newBanSao);
 }
 
 export async function getAllBanSao(req: Request, res: Response) {
 	const listBanSao = await banSaoService.getAllBanSao();
 
-	res.status(200).json({
-		message: "Lấy danh sách bản sao thành công.",
-		data: listBanSao,
-	});
+	res.status(200).json(listBanSao);
 }
 
 export async function getBanSaoByMa(req: Request, res: Response) {
 	const { maBanSao } = req.params as { maBanSao: string };
 	const banSao = await banSaoService.getBanSaoByMa(maBanSao);
 
-	res.status(200).json({
-		message: "Lấy thông tin bản sao thành công.",
-		banSao: banSao,
-	});
+	res.status(200).json(banSao);
 }
 
 export async function updateBanSao(req: Request, res: Response) {
@@ -38,10 +29,7 @@ export async function updateBanSao(req: Request, res: Response) {
 
 	const updatedBanSao = await banSaoService.updateBanSao(maBanSao, payload);
 
-	res.status(200).json({
-		message: "Cập nhật bản sao thành công.",
-		banSao: updatedBanSao,
-	});
+	res.status(200).json(updatedBanSao);
 }
 
 export async function deleteBanSao(req: Request, res: Response) {
@@ -49,7 +37,5 @@ export async function deleteBanSao(req: Request, res: Response) {
 
 	await banSaoService.deleteBanSao(maBanSao);
 
-	res.status(200).json({
-		message: "Xóa bản sao thành công.",
-	});
+	res.status(204).end();
 }
