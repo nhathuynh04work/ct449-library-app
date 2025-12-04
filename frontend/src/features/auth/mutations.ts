@@ -23,9 +23,9 @@ export function useLogin() {
                 });
             }
         },
-        onSuccess: (data, variables) => {
+        onSuccess: (data) => {
             localStorage.setItem("token", data.token);
-            localStorage.setItem("userRole", variables.type);
+            localStorage.setItem("user", JSON.stringify(data.user));
         },
     });
 }

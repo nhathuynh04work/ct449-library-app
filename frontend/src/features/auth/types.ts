@@ -14,7 +14,3 @@ export interface RegisterPayload {
     diaChi: string;
     matKhau: string;
 }
-
-export interface LoginData {
-    token: string;
-}

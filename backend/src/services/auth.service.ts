@@ -57,7 +57,8 @@ export async function loginNhanVien(payload: NhanVienLoginPayload) {
 	};
 
 	const token = generateToken(tokenPayload);
-	return { token, maNhanVien: nhanVien.maNhanVien };
+	const { matKhau, ...user } = nhanVien;
+	return { token, user };
 }
 
 export async function loginDocGia(payload: DocGiaLoginPayload) {
@@ -75,5 +76,6 @@ export async function loginDocGia(payload: DocGiaLoginPayload) {
 	};
 
 	const token = generateToken(tokenPayload);
-	return { token, maDocGia: docGia.maDocGia };
+	const { matKhau, ...user } = docGia;
+	return { token, user };
 }

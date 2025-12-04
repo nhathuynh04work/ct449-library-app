@@ -4,7 +4,7 @@ import { useRouter } from "vue-router";
 import { User, Library, ArrowRight } from "lucide-vue-next";
 import NeoInput from "@/components/ui/NeoInput.vue";
 import NeoButton from "@/components/ui/NeoButton.vue";
-import Logo from "@/assets/logo.svg";
+import Logo from "@/assets/logo-icon-and-text.svg";
 import { useLogin } from "@/features/auth/mutations";
 import { useToast } from "@/composables/useToast";
 
