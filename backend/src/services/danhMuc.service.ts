@@ -6,7 +6,26 @@ import type {
 } from "@/schemas/danhMuc.schema.js";
 
 export async function getAllDanhMuc() {
-	return DanhMuc.find().lean();
+	return await DanhMuc.aggregate([
+		{
+			$lookup: {
+				from: "saches",
+				localField: "_id",
+				foreignField: "danhMuc",
+				as: "books",
+			},
+		},
+		{
+			$addFields: {
+				soLuongSach: { $size: "$books" },
+			},
+		},
+		{
+			$project: {
+				books: 0,
+			},
+		},
+	]);
 }
 
 export async function createDanhMuc(payload: CreateDanhMucPayload) {

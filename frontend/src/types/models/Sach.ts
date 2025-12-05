@@ -6,6 +6,7 @@ export interface Sach {
     maSach: string;
     tenSach: string;
     namXuatBan: number;
+    soLuongBanSao?: number;
 
     nhaXuatBan: NhaXuatBan;
     tacGia: TacGia[];

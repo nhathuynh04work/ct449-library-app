@@ -1,11 +1,20 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { Search, Plus, Trash2, Edit, AlertCircle, Loader2 } from "lucide-vue-next";
+import {
+    Search,
+    Plus,
+    Trash2,
+    Edit,
+    AlertCircle,
+    Loader2,
+    Copy as CopyIcon,
+} from "lucide-vue-next";
 import NeoButton from "@/components/ui/NeoButton.vue";
 import { useBooks } from "@/features/books/queries";
 import { useDeleteBook } from "@/features/books/mutations";
 import { useToast } from "@/composables/useToast";
 import BookForm from "./BookForm.vue";
+import NeoConfirmModal from "@/components/ui/NeoConfirmModal.vue";
 
 // Data & Queries
 const { data: books, isLoading, isError } = useBooks();
@@ -14,6 +23,7 @@ const { addToast } = useToast();
 
 const searchQuery = ref("");
 const isCreateModalOpen = ref(false);
+const deleteId = ref<string | null>(null);
 
 // Filter Books
 const filteredBooks = computed(() => {
@@ -29,25 +39,27 @@ const filteredBooks = computed(() => {
 });
 
 // Actions
-const handleDelete = (id: string) => {
-    if (confirm("Bạn có chắc chắn muốn xóa sách này không?")) {
-        deleteBook(id, {
-            onSuccess: () => {
-                addToast({
-                    title: "Thành công",
-                    description: "Đã xóa sách khỏi hệ thống.",
-                    variant: "success",
-                });
-            },
-            onError: (err: any) => {
-                addToast({
-                    title: "Lỗi",
-                    description: err.message || "Không thể xóa sách.",
-                    variant: "error",
-                });
-            },
-        });
-    }
+const confirmDelete = () => {
+    if (!deleteId.value) return;
+
+    deleteBook(deleteId.value, {
+        onSuccess: () => {
+            addToast({
+                title: "Thành công",
+                description: "Đã xóa sách khỏi hệ thống.",
+                variant: "success",
+            });
+            deleteId.value = null;
+        },
+        onError: (err: any) => {
+            addToast({
+                title: "Lỗi",
+                description: err.message || "Không thể xóa sách.",
+                variant: "error",
+            });
+            deleteId.value = null;
+        },
+    });
 };
 
 // Helper for badges
@@ -124,6 +136,11 @@ const getCategoryColor = (index: number) => {
                             >
                                 Danh mục
                             </th>
+                            <th
+                                class="p-4 border-r-2 border-black font-black uppercase tracking-wide w-32 text-center"
+                            >
+                                Bản sao
+                            </th>
                             <th class="p-4 font-black uppercase tracking-wide w-32 text-center">
                                 Thao tác
                             </th>
@@ -187,6 +204,15 @@ const getCategoryColor = (index: number) => {
                                 </div>
                             </td>
 
+                            <td class="p-4 border-r-2 border-black align-middle text-center">
+                                <div
+                                    class="flex items-center justify-center gap-1 font-black text-lg"
+                                >
+                                    <CopyIcon :size="16" class="text-gray-500" />
+                                    {{ book.soLuongBanSao || 0 }}
+                                </div>
+                            </td>
+
                             <td class="p-4 align-middle text-center">
                                 <div class="flex justify-center gap-2">
                                     <button
@@ -196,10 +222,9 @@ const getCategoryColor = (index: number) => {
                                         <Edit :size="18" />
                                     </button>
                                     <button
-                                        @click="handleDelete(book.maSach)"
+                                        @click="deleteId = book.maSach"
                                         class="p-2 bg-red-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none active:bg-red-500 transition-all text-black"
                                         title="Xóa"
-                                        :disabled="isDeleting"
                                     >
                                         <Trash2 :size="18" />
                                     </button>
@@ -208,7 +233,7 @@ const getCategoryColor = (index: number) => {
                         </tr>
 
                         <tr v-if="filteredBooks.length === 0">
-                            <td colspan="5" class="p-8 text-center bg-gray-50">
+                            <td colspan="6" class="p-8 text-center bg-gray-50">
                                 <p class="font-bold text-gray-500">
                                     Không tìm thấy sách nào phù hợp.
                                 </p>
@@ -244,6 +269,15 @@ const getCategoryColor = (index: number) => {
             v-if="isCreateModalOpen"
             @close="isCreateModalOpen = false"
             @success="isCreateModalOpen = false"
+        />
+
+        <NeoConfirmModal
+            v-if="deleteId"
+            title="Xóa Sách"
+            description="Bạn có chắc chắn muốn xóa cuốn sách này? Hành động này không thể hoàn tác."
+            variant="danger"
+            @close="deleteId = null"
+            @confirm="confirmDelete"
         />
     </div>
 </template>

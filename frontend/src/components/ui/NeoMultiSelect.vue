@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { Check, ChevronDown, X } from "lucide-vue-next";
+import { useSmartPosition } from "@/composables/useSmartPosition";
 
 export interface SelectOption {
     value: string;
@@ -19,12 +20,14 @@ const emit = defineEmits(["update:modelValue"]);
 
 const isOpen = ref(false);
 const dropdownRef = ref<HTMLDivElement | null>(null);
+const { position, calculatePosition } = useSmartPosition();
 
-const selectedLabels = computed(() => {
-    return props.options
-        .filter((opt) => props.modelValue.includes(opt.value))
-        .map((opt) => opt.label);
-});
+const toggleDropdown = () => {
+    if (!isOpen.value) {
+        calculatePosition(dropdownRef.value);
+    }
+    isOpen.value = !isOpen.value;
+};
 
 const toggleOption = (value: string) => {
     const newValue = [...props.modelValue];
@@ -42,7 +45,6 @@ const removeItem = (e: Event, value: string) => {
     toggleOption(value);
 };
 
-// Close when clicking outside
 const handleClickOutside = (e: MouseEvent) => {
     if (dropdownRef.value && !dropdownRef.value.contains(e.target as Node)) {
         isOpen.value = false;
@@ -61,7 +63,7 @@ onUnmounted(() => document.removeEventListener("click", handleClickOutside));
 
         <div class="relative">
             <div
-                @click="isOpen = !isOpen"
+                @click="toggleDropdown"
                 class="w-full min-h-[52px] p-2 border-2 border-black bg-white cursor-pointer transition-all hover:shadow-neo-sm flex items-center justify-between gap-2"
                 :class="{ 'shadow-neo-sm': isOpen }"
             >
@@ -88,7 +90,8 @@ onUnmounted(() => document.removeEventListener("click", handleClickOutside));
 
             <div
                 v-if="isOpen"
-                class="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-black max-h-60 overflow-y-auto z-50 shadow-neo"
+                class="absolute left-0 right-0 border-2 border-black bg-white z-50 shadow-neo max-h-60 overflow-y-auto"
+                :class="position === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'"
             >
                 <div
                     v-for="opt in options"

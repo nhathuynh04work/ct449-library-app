@@ -11,7 +11,26 @@ export async function createNhaXuatBan(payload: CreateNhaXuatBanPayload) {
 }
 
 export async function getAllNhaXuatBan() {
-	return await NhaXuatBan.find().lean();
+	return await NhaXuatBan.aggregate([
+		{
+			$lookup: {
+				from: "saches",
+				localField: "_id",
+				foreignField: "nhaXuatBan",
+				as: "books",
+			},
+		},
+		{
+			$addFields: {
+				soLuongSach: { $size: "$books" },
+			},
+		},
+		{
+			$project: {
+				books: 0,
+			},
+		},
+	]);
 }
 
 export async function updateNhaXuatBan(

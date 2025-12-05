@@ -10,7 +10,26 @@ export async function createTacGia(payload: CreateTacGiaPayload) {
 }
 
 export async function getAllTacGia() {
-	return await TacGia.find().lean();
+	return await TacGia.aggregate([
+		{
+			$lookup: {
+				from: "saches",
+				localField: "_id",
+				foreignField: "tacGia",
+				as: "books",
+			},
+		},
+		{
+			$addFields: {
+				soLuongSach: { $size: "$books" },
+			},
+		},
+		{
+			$project: {
+				books: 0,
+			},
+		},
+	]);
 }
 
 export async function updateTacGia(id: string, payload: UpdateTacGiaPayload) {

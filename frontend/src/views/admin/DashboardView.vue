@@ -9,7 +9,7 @@ import {
     LogOut,
     Bell,
     Plus,
-    Search,
+    // Search,
     ArrowUpRight,
     Settings,
     Database,
@@ -22,7 +22,7 @@ import ResourceManager from "./ResourceManager.vue";
 
 const router = useRouter();
 const activeTab = ref("overview");
-const currentUser = ref<any>(null);
+const currentUser = ref(null);
 const showUserMenu = ref(false);
 
 // Stat Cards Data
@@ -44,10 +44,6 @@ const navItems = [
 
 onMounted(() => {
     currentUser.value = getUserFromLocalStorage();
-    if (!currentUser.value) {
-        // Fallback or redirect if needed, though router guard handles this
-        // currentUser.value = { ten: "Admin", chucVu: "Librarian" };
-    }
 });
 
 const handleLogout = () => {
@@ -95,15 +91,6 @@ const handleLogout = () => {
                 </div>
 
                 <div class="flex items-center gap-4">
-                    <div class="relative hidden md:block">
-                        <Search class="absolute left-3 top-2.5 text-gray-500" :size="20" />
-                        <input
-                            type="text"
-                            placeholder="Tìm kiếm..."
-                            class="pl-10 pr-4 py-2 bg-gray-100 border-2 border-black rounded-none outline-none focus:bg-white focus:shadow-neo-sm transition-all w-64 font-bold"
-                        />
-                    </div>
-
                     <div class="relative">
                         <button
                             @click="showUserMenu = !showUserMenu"
@@ -262,42 +249,6 @@ const handleLogout = () => {
                                 </button>
                             </div>
                         </div>
-
-                        <div
-                            class="bg-white border-4 border-black shadow-neo min-h-[300px] p-6 relative overflow-hidden"
-                        >
-                            <div
-                                class="absolute top-0 right-0 bg-yellow-400 text-black text-xs font-bold px-3 py-1 border-l-2 border-b-2 border-black"
-                            >
-                                MỚI CẬP NHẬT
-                            </div>
-                            <h2 class="text-xl font-black uppercase mb-4">
-                                Sách đang được mượn nhiều nhất
-                            </h2>
-                            <div class="space-y-3">
-                                <div
-                                    v-for="i in 3"
-                                    :key="i"
-                                    class="flex items-center gap-4 p-3 hover:bg-gray-50 border-b-2 border-dashed border-gray-200 last:border-0"
-                                >
-                                    <div
-                                        class="w-12 h-16 bg-gray-200 border-2 border-black flex-shrink-0"
-                                    ></div>
-                                    <div class="flex-1">
-                                        <h4 class="font-bold text-lg">Nhà Giả Kim</h4>
-                                        <p class="text-sm text-gray-500 font-medium">
-                                            Paulo Coelho
-                                        </p>
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="block font-black text-xl">42</span>
-                                        <span class="text-xs font-bold uppercase text-green-600"
-                                            >Lượt mượn</span
-                                        >
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <div class="bg-white border-4 border-black shadow-neo p-0 h-fit">
@@ -332,39 +283,12 @@ const handleLogout = () => {
                                     </p>
                                 </div>
                             </div>
-                            <div class="p-4 bg-white flex gap-3 items-start">
-                                <div class="w-2 h-2 bg-green-500 rounded-full mt-2 shrink-0"></div>
-                                <div>
-                                    <p class="font-bold text-sm">
-                                        Hệ thống
-                                        <span class="font-normal">đã cập nhật kho sách</span>
-                                    </p>
-                                    <p class="text-xs font-bold text-gray-400 mt-1 uppercase">
-                                        1 giờ trước
-                                    </p>
-                                </div>
-                            </div>
                         </div>
-                        <button
-                            class="w-full py-3 font-bold text-center hover:bg-gray-100 transition-colors uppercase text-sm border-t-4 border-black"
-                        >
-                            Xem tất cả hoạt động
-                        </button>
                     </div>
                 </div>
             </div>
 
             <div v-else-if="activeTab === 'books'" class="animate-in">
-                <div class="flex items-center gap-4 mb-6">
-                    <div class="p-3 bg-blue-300 border-4 border-black shadow-neo">
-                        <Book :size="32" stroke-width="2.5" />
-                    </div>
-                    <div>
-                        <h1 class="text-4xl font-black font-display uppercase">Quản Lý Sách</h1>
-                        <p class="font-bold text-gray-500">Danh sách toàn bộ sách trong thư viện</p>
-                    </div>
-                </div>
-
                 <BookManager />
             </div>
 

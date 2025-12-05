@@ -16,11 +16,34 @@ export async function createSach(payload: CreateSachPayload) {
 }
 
 export async function getAllSach() {
-	const result = await Sach.find()
-		.populate("tacGia danhMuc nhaXuatBan")
-		.lean();
+	const result = await Sach.aggregate([
+		{
+			$lookup: {
+				from: "bansaos",
+				localField: "_id",
+				foreignField: "sach",
+				as: "copies",
+			},
+		},
+		{
+			$addFields: {
+				soLuongBanSao: { $size: "$copies" },
+			},
+		},
+		{
+			$project: {
+				copies: 0,
+			},
+		},
+	]);
 
-	return result as ISach[];
+	await Sach.populate(result, [
+		{ path: "tacGia" },
+		{ path: "danhMuc" },
+		{ path: "nhaXuatBan" },
+	]);
+
+	return result;
 }
 
 export async function getSachById(id: string) {
