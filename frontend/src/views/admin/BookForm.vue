@@ -12,13 +12,11 @@ import { useToast } from "@/composables/useToast";
 const emit = defineEmits(["close", "success"]);
 const { addToast } = useToast();
 
-// Queries
 const { data: authors } = useAuthors();
 const { data: publishers } = usePublishers();
 const { data: categories } = useCategories();
 const { mutate: createBook, isPending } = useCreateBook();
 
-// Options mapping
 const authorOptions = computed(
     () => authors.value?.map((a) => ({ value: a._id, label: a.tenTacGia })) || [],
 );
@@ -29,7 +27,6 @@ const categoryOptions = computed(
     () => categories.value?.map((c) => ({ value: c._id, label: c.tenDanhMuc })) || [],
 );
 
-// Form State
 const form = ref({
     tenSach: "",
     namXuatBan: new Date().getFullYear(),
@@ -63,7 +60,7 @@ const handleSubmit = () => {
                 emit("success");
                 emit("close");
             },
-            onError: (err: any) => {
+            onError: (err: Error) => {
                 addToast({
                     title: "Lỗi",
                     description: err.message || "Không thể thêm sách.",
@@ -101,7 +98,6 @@ const handleSubmit = () => {
                         v-model="form.tenSach"
                         placeholder="Nhập tên sách..."
                     />
-
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <NeoInput
                             id="namXuatBan"
@@ -109,7 +105,6 @@ const handleSubmit = () => {
                             type="number"
                             v-model="form.namXuatBan"
                         />
-
                         <NeoSelect
                             id="nhaXuatBan"
                             label="Nhà Xuất Bản"
@@ -118,15 +113,13 @@ const handleSubmit = () => {
                             placeholder="Chọn NXB..."
                         />
                     </div>
-
                     <NeoMultiSelect
                         id="tacGia"
                         label="Tác Giả"
                         v-model="form.tacGia"
                         :options="authorOptions"
-                        placeholder="Chọn một hoặc nhiều tác giả..."
+                        placeholder="Chọn tác giả..."
                     />
-
                     <NeoMultiSelect
                         id="danhMuc"
                         label="Danh Mục"

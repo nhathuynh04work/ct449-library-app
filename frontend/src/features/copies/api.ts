@@ -1,11 +1,5 @@
 import api from "@/api/axios";
-
-export interface BanSao {
-    _id: string;
-    maBanSao: string;
-    trangThai: "AVAILABLE" | "BORROWED" | "LOST" | "DAMAGED";
-    sach: any;
-}
+import type { BanSao } from "@/types/models/BanSao";
 
 export const copiesApi = {
     getByBookId: async (sachId: string): Promise<BanSao[]> => {

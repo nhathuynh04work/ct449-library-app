@@ -1,5 +1,6 @@
 import api from "@/api/axios";
 import type { Sach } from "@/types/models/Sach";
+import type { TheoDoiMuonSach } from "@/types/models/TheoDoiMuonSach";
 
 export interface CreateBookPayload {
     tenSach: string;
@@ -7,16 +8,6 @@ export interface CreateBookPayload {
     tacGia: string[];
     danhMuc: string[];
     nhaXuatBan: string;
-}
-
-export interface BorrowRecord {
-    _id: string;
-    ngayMuon: string;
-    ngayTra?: string;
-    banSao: {
-        maBanSao: string;
-        sach: Sach;
-    };
 }
 
 export const booksApi = {
@@ -43,7 +34,7 @@ export const booksApi = {
         await api.post(`/sach/${id}/muon`);
     },
 
-    getHistory: async (): Promise<BorrowRecord[]> => {
+    getHistory: async (): Promise<TheoDoiMuonSach[]> => {
         const { data } = await api.get("/tracking/me");
         return data;
     },

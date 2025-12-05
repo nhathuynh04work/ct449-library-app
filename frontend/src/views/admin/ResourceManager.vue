@@ -8,7 +8,6 @@ import {
     Trash2,
     Loader2,
     Search,
-    AlertCircle,
     BookOpen,
 } from "lucide-vue-next";
 import NeoButton from "@/components/ui/NeoButton.vue";
@@ -51,23 +50,26 @@ const formData = ref({
     extra: "",
 });
 
-// Helpers
 const isLoading = computed(() => l1.value || l2.value || l3.value);
 
-// Filter Data
-const filteredData = computed(() => {
-    const query = searchQuery.value.toLowerCase();
+// Typed Filters to avoid 'any'
+const filteredAuthors = computed(() =>
+    (authors.value || []).filter((a) =>
+        a.tenTacGia.toLowerCase().includes(searchQuery.value.toLowerCase()),
+    ),
+);
 
-    if (activeTab.value === "AUTHORS") {
-        return (authors.value || []).filter((a) => a.tenTacGia.toLowerCase().includes(query));
-    } else if (activeTab.value === "PUBLISHERS") {
-        return (publishers.value || []).filter((p) =>
-            p.tenNhaXuatBan.toLowerCase().includes(query),
-        );
-    } else {
-        return (categories.value || []).filter((c) => c.tenDanhMuc.toLowerCase().includes(query));
-    }
-});
+const filteredPublishers = computed(() =>
+    (publishers.value || []).filter((p) =>
+        p.tenNhaXuatBan.toLowerCase().includes(searchQuery.value.toLowerCase()),
+    ),
+);
+
+const filteredCategories = computed(() =>
+    (categories.value || []).filter((c) =>
+        c.tenDanhMuc.toLowerCase().includes(searchQuery.value.toLowerCase()),
+    ),
+);
 
 const handleOpenModal = () => {
     formData.value = { name: "", extra: "" };
@@ -164,8 +166,7 @@ const confirmDelete = () => {
                 @click="handleOpenModal"
                 class="w-full md:w-auto flex items-center justify-center gap-2"
             >
-                <Plus :size="20" stroke-width="3" />
-                Thêm Mới
+                <Plus :size="20" stroke-width="3" /> Thêm Mới
             </NeoButton>
         </div>
 
@@ -191,41 +192,23 @@ const confirmDelete = () => {
                             >
                                 #
                             </th>
-
-                            <template v-if="activeTab === 'AUTHORS'">
-                                <th
-                                    class="p-4 border-r-2 border-black font-black uppercase tracking-wide w-1/3"
-                                >
-                                    Tên Tác Giả
-                                </th>
-                                <th
-                                    class="p-4 border-r-2 border-black font-black uppercase tracking-wide"
-                                >
-                                    Tiểu Sử
-                                </th>
-                            </template>
-
-                            <template v-if="activeTab === 'PUBLISHERS'">
-                                <th
-                                    class="p-4 border-r-2 border-black font-black uppercase tracking-wide w-1/3"
-                                >
-                                    Tên Nhà Xuất Bản
-                                </th>
-                                <th
-                                    class="p-4 border-r-2 border-black font-black uppercase tracking-wide"
-                                >
-                                    Địa Chỉ
-                                </th>
-                            </template>
-
-                            <template v-if="activeTab === 'CATEGORIES'">
-                                <th
-                                    class="p-4 border-r-2 border-black font-black uppercase tracking-wide"
-                                >
-                                    Tên Danh Mục
-                                </th>
-                            </template>
-
+                            <th
+                                class="p-4 border-r-2 border-black font-black uppercase tracking-wide w-1/3"
+                            >
+                                {{
+                                    activeTab === "AUTHORS"
+                                        ? "Tên Tác Giả"
+                                        : activeTab === "PUBLISHERS"
+                                          ? "Tên Nhà Xuất Bản"
+                                          : "Tên Danh Mục"
+                                }}
+                            </th>
+                            <th
+                                v-if="activeTab !== 'CATEGORIES'"
+                                class="p-4 border-r-2 border-black font-black uppercase tracking-wide"
+                            >
+                                {{ activeTab === "AUTHORS" ? "Tiểu Sử" : "Địa Chỉ" }}
+                            </th>
                             <th
                                 class="p-4 border-r-2 border-black font-black uppercase tracking-wide w-24 text-center"
                             >
@@ -236,10 +219,11 @@ const confirmDelete = () => {
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y-2 divide-black">
+
+                    <tbody v-if="activeTab === 'AUTHORS'" class="divide-y-2 divide-black">
                         <tr
-                            v-for="(item, index) in filteredData"
-                            :key="(item as any)._id"
+                            v-for="(item, index) in filteredAuthors"
+                            :key="item._id"
                             class="hover:bg-gray-50 transition-colors group"
                         >
                             <td
@@ -247,47 +231,23 @@ const confirmDelete = () => {
                             >
                                 {{ index + 1 }}
                             </td>
-
-                            <template v-if="activeTab === 'AUTHORS'">
-                                <td class="p-4 border-r-2 border-black font-bold text-lg">
-                                    {{ (item as any).tenTacGia }}
-                                </td>
-                                <td class="p-4 border-r-2 border-black text-gray-600 line-clamp-2">
-                                    {{ (item as any).tieuSu || "—" }}
-                                </td>
-                            </template>
-
-                            <template v-if="activeTab === 'PUBLISHERS'">
-                                <td class="p-4 border-r-2 border-black font-bold text-lg">
-                                    {{ (item as any).tenNhaXuatBan }}
-                                </td>
-                                <td class="p-4 border-r-2 border-black text-gray-600">
-                                    {{ (item as any).diaChi }}
-                                </td>
-                            </template>
-
-                            <template v-if="activeTab === 'CATEGORIES'">
-                                <td class="p-4 border-r-2 border-black font-bold text-lg">
-                                    <span
-                                        class="bg-green-100 border-2 border-black px-3 py-1 shadow-neo-sm inline-block"
-                                    >
-                                        {{ (item as any).tenDanhMuc }}
-                                    </span>
-                                </td>
-                            </template>
-
+                            <td class="p-4 border-r-2 border-black font-bold text-lg">
+                                {{ item.tenTacGia }}
+                            </td>
+                            <td class="p-4 border-r-2 border-black text-gray-600 line-clamp-2">
+                                {{ item.tieuSu || "—" }}
+                            </td>
                             <td class="p-4 border-r-2 border-black text-center">
                                 <div
                                     class="flex items-center justify-center gap-1 font-black text-lg"
                                 >
                                     <BookOpen :size="16" class="text-gray-400" />
-                                    {{ (item as any).soLuongSach || 0 }}
+                                    {{ item.soLuongSach || 0 }}
                                 </div>
                             </td>
-
                             <td class="p-4 align-middle text-center">
                                 <button
-                                    @click="deleteId = (item as any)._id"
+                                    @click="deleteId = item._id"
                                     class="p-2 bg-red-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none active:bg-red-500 transition-all text-black"
                                     title="Xóa"
                                 >
@@ -295,13 +255,78 @@ const confirmDelete = () => {
                                 </button>
                             </td>
                         </tr>
+                    </tbody>
 
-                        <tr v-if="filteredData.length === 0">
-                            <td colspan="5" class="p-12 text-center text-gray-500">
-                                <div class="flex flex-col items-center gap-2">
-                                    <AlertCircle :size="32" />
-                                    <p class="font-bold text-lg">Không tìm thấy dữ liệu phù hợp.</p>
+                    <tbody v-if="activeTab === 'PUBLISHERS'" class="divide-y-2 divide-black">
+                        <tr
+                            v-for="(item, index) in filteredPublishers"
+                            :key="item._id"
+                            class="hover:bg-gray-50 transition-colors group"
+                        >
+                            <td
+                                class="p-4 border-r-2 border-black text-center font-bold text-gray-500"
+                            >
+                                {{ index + 1 }}
+                            </td>
+                            <td class="p-4 border-r-2 border-black font-bold text-lg">
+                                {{ item.tenNhaXuatBan }}
+                            </td>
+                            <td class="p-4 border-r-2 border-black text-gray-600">
+                                {{ item.diaChi }}
+                            </td>
+                            <td class="p-4 border-r-2 border-black text-center">
+                                <div
+                                    class="flex items-center justify-center gap-1 font-black text-lg"
+                                >
+                                    <BookOpen :size="16" class="text-gray-400" />
+                                    {{ item.soLuongSach || 0 }}
                                 </div>
+                            </td>
+                            <td class="p-4 align-middle text-center">
+                                <button
+                                    @click="deleteId = item._id"
+                                    class="p-2 bg-red-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none active:bg-red-500 transition-all text-black"
+                                    title="Xóa"
+                                >
+                                    <Trash2 :size="18" />
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+
+                    <tbody v-if="activeTab === 'CATEGORIES'" class="divide-y-2 divide-black">
+                        <tr
+                            v-for="(item, index) in filteredCategories"
+                            :key="item._id"
+                            class="hover:bg-gray-50 transition-colors group"
+                        >
+                            <td
+                                class="p-4 border-r-2 border-black text-center font-bold text-gray-500"
+                            >
+                                {{ index + 1 }}
+                            </td>
+                            <td class="p-4 border-r-2 border-black font-bold text-lg">
+                                <span
+                                    class="bg-green-100 border-2 border-black px-3 py-1 shadow-neo-sm inline-block"
+                                    >{{ item.tenDanhMuc }}</span
+                                >
+                            </td>
+                            <td class="p-4 border-r-2 border-black text-center">
+                                <div
+                                    class="flex items-center justify-center gap-1 font-black text-lg"
+                                >
+                                    <BookOpen :size="16" class="text-gray-400" />
+                                    {{ item.soLuongSach || 0 }}
+                                </div>
+                            </td>
+                            <td class="p-4 align-middle text-center">
+                                <button
+                                    @click="deleteId = item._id"
+                                    class="p-2 bg-red-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none active:bg-red-500 transition-all text-black"
+                                    title="Xóa"
+                                >
+                                    <Trash2 :size="18" />
+                                </button>
                             </td>
                         </tr>
                     </tbody>

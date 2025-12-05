@@ -5,6 +5,7 @@ import { ArrowLeft, CheckCircle, Copy, ArrowRight } from "lucide-vue-next";
 import NeoInput from "@/components/ui/NeoInput.vue";
 import NeoButton from "@/components/ui/NeoButton.vue";
 import NeoSelect from "@/components/ui/NeoSelect.vue";
+import Logo from "@/assets/logo-icon-and-text.svg"; // Added Import
 import { useRegister } from "@/features/auth/mutations";
 import { useToast } from "@/composables/useToast";
 import type { RegisterPayload } from "@/features/auth/types";
@@ -70,6 +71,18 @@ const goToLogin = () => {
             background-size: 20px 20px;
         "
     >
+        <RouterLink
+            to="/"
+            class="absolute top-6 left-6 z-20 transition-transform hover:scale-105 active:scale-95"
+            title="Về trang chủ"
+        >
+            <img
+                :src="Logo"
+                alt="Storism"
+                class="h-12 drop-shadow-[2px_2px_0px_rgba(0,0,0,1)] bg-white border-2 border-black p-1"
+            />
+        </RouterLink>
+
         <div
             class="absolute top-10 left-10 md:w-32 md:h-32 bg-yellow-400 border-4 border-black rounded-full shadow-neo hidden md:block"
         ></div>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import { X, Plus, Trash2, CheckCircle, AlertTriangle, HelpCircle } from "lucide-vue-next";
+import { computed } from "vue";
+import { X, Plus, Trash2 } from "lucide-vue-next";
 import NeoButton from "@/components/ui/NeoButton.vue";
 import { useBookCopies } from "@/features/copies/queries";
 import { useCreateCopy, useDeleteCopy, useUpdateCopyStatus } from "@/features/copies/mutations";
@@ -11,10 +11,11 @@ const props = defineProps<{
     bookTitle: string;
 }>();
 
-const emit = defineEmits(["close"]);
+// Fix: Removed 'const emit =' as it was unused in script
+defineEmits(["close"]);
+
 const { addToast } = useToast();
 
-// Use computed prop for the query to be reactive
 const bookIdRef = computed(() => props.bookId);
 const { data: copies, isLoading } = useBookCopies(bookIdRef);
 
@@ -46,9 +47,7 @@ const handleStatusChange = (id: string, event: Event) => {
     const newStatus = (event.target as HTMLSelectElement).value;
     updateStatus.mutate(
         { id, status: newStatus },
-        {
-            onSuccess: () => addToast({ title: "Đã cập nhật", variant: "success" }),
-        },
+        { onSuccess: () => addToast({ title: "Đã cập nhật", variant: "success" }) },
     );
 };
 
@@ -108,14 +107,12 @@ const getStatusColor = (status: string) => {
                 <div v-if="isLoading" class="text-center py-10 font-bold text-gray-500">
                     Đang tải...
                 </div>
-
                 <div
                     v-else-if="!copies || copies.length === 0"
                     class="text-center py-10 border-2 border-dashed border-gray-300"
                 >
                     <p class="font-bold text-gray-400">Chưa có bản sao nào.</p>
                 </div>
-
                 <table v-else class="w-full text-left border-collapse">
                     <thead class="sticky top-0 bg-white z-10">
                         <tr class="border-b-2 border-black text-xs uppercase text-gray-500">
@@ -140,15 +137,6 @@ const getStatusColor = (status: string) => {
                                         <option value="LOST">Đã mất</option>
                                         <option value="DAMAGED">Hư hỏng</option>
                                     </select>
-                                    <div
-                                        class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none"
-                                    >
-                                        <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                                            <path
-                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                            />
-                                        </svg>
-                                    </div>
                                 </div>
                             </td>
                             <td class="p-3 text-right">

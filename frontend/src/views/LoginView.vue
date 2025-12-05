@@ -54,8 +54,15 @@ const handleLogin = () => {
                 class="absolute bottom-20 left-10 w-32 h-32 bg-green-400 border-4 border-black rotate-12"
             ></div>
 
-            <div class="z-10">
-                <img :src="Logo" alt="Storism Logo" class="h-16 mb-6" />
+            <div class="z-10 mt-12 md:mt-0">
+                <RouterLink to="/" class="inline-block" title="Về trang chủ">
+                    <img
+                        :src="Logo"
+                        alt="Storism Logo"
+                        class="h-16 mb-6 hover:scale-105 transition-transform origin-left"
+                    />
+                </RouterLink>
+
                 <h1 class="text-6xl font-black uppercase leading-tight mb-4">
                     Hệ thống<br />Quản lý<br />Thư viện
                 </h1>
