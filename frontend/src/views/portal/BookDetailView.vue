@@ -138,13 +138,13 @@ const getRandomColor = (id: string) => {
                             <div
                                 class="w-3 h-3 rounded-full"
                                 :class="
-                                    (book.soLuongBanSao || 0) > 0 ? 'bg-green-500' : 'bg-red-500'
+                                    (book.soLuongKhaDung || 0) > 0 ? 'bg-green-500' : 'bg-red-500'
                                 "
                             ></div>
                             <span class="font-bold text-sm">
                                 {{
-                                    (book.soLuongBanSao || 0) > 0
-                                        ? "Có sẵn tại thư viện"
+                                    (book.soLuongKhaDung || 0) > 0
+                                        ? `Có sẵn ${book.soLuongKhaDung} cuốn`
                                         : "Tạm hết hàng"
                                 }}
                             </span>
@@ -156,7 +156,7 @@ const getRandomColor = (id: string) => {
 
                     <NeoButton
                         variant="primary"
-                        :disabled="(isLoggedIn && (book.soLuongBanSao || 0) <= 0) || isPending"
+                        :disabled="(isLoggedIn && (book.soLuongKhaDung || 0) <= 0) || isPending"
                         @click="handleMainAction"
                     >
                         <template v-if="!isLoggedIn">
@@ -175,10 +175,37 @@ const getRandomColor = (id: string) => {
         <NeoConfirmModal
             v-if="showConfirm"
             title="Xác nhận mượn sách"
-            :description="`Bạn có chắc chắn muốn đăng ký mượn cuốn '${book?.tenSach}' không?`"
-            variant="info"
+            variant="success"
+            :processing="isPending"
             @close="showConfirm = false"
             @confirm="handleBorrow"
-        />
+        >
+            <div class="space-y-3">
+                <p>Bạn đang đăng ký mượn cuốn sách sau:</p>
+                <div class="bg-yellow-50 border-2 border-black p-3 flex gap-4">
+                    <div
+                        class="w-16 h-20 bg-gray-200 border-2 border-black flex items-center justify-center shrink-0"
+                    >
+                        <BookOpen :size="24" class="text-gray-400" />
+                    </div>
+                    <div>
+                        <p class="font-black text-lg uppercase leading-tight line-clamp-2">
+                            {{ book?.tenSach }}
+                        </p>
+                        <p class="text-sm font-medium text-gray-600 line-clamp-1">
+                            {{ book?.tacGia.map((t) => t.tenTacGia).join(", ") }}
+                        </p>
+                        <p
+                            class="text-xs font-mono font-bold mt-1 bg-white inline-block px-1 border border-black"
+                        >
+                            {{ book?.maSach }}
+                        </p>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-500 italic">
+                    Vui lòng đến thư viện nhận sách sau khi yêu cầu được duyệt.
+                </p>
+            </div>
+        </NeoConfirmModal>
     </div>
 </template>

@@ -1,16 +1,25 @@
+import type { TacGia } from "./TacGia";
 import type { DanhMuc } from "./DanhMuc";
 import type { NhaXuatBan } from "./NhaXuatBan";
-import type { TacGia } from "./TacGia";
 
 export interface Sach {
+    _id: string;
     maSach: string;
     tenSach: string;
+    donGia: number;
+    soQuyen: number;
     namXuatBan: number;
-    soLuongBanSao?: number;
+    trangThai: string;
 
-    nhaXuatBan: NhaXuatBan;
+    // Relations
     tacGia: TacGia[];
     danhMuc: DanhMuc[];
+    nhaXuatBan: NhaXuatBan | string; // Can be populated or ID
 
-    _id: string;
+    // Augmented fields from aggregations
+    soLuongBanSao?: number;
+    soLuongKhaDung?: number;
+
+    createdAt?: string;
+    updatedAt?: string;
 }

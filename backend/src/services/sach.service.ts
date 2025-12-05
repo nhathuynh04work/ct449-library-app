@@ -28,6 +28,20 @@ export async function getAllSach() {
 		{
 			$addFields: {
 				soLuongBanSao: { $size: "$copies" },
+				soLuongKhaDung: {
+					$size: {
+						$filter: {
+							input: "$copies",
+							as: "copy",
+							cond: {
+								$eq: [
+									"$$copy.trangThai",
+									TrangThaiBanSao.AVAILABLE,
+								],
+							},
+						},
+					},
+				},
 			},
 		},
 		{
@@ -47,13 +61,54 @@ export async function getAllSach() {
 }
 
 export async function getSachById(id: string) {
-	const sach = await Sach.findById(id)
-		.populate("tacGia danhMuc nhaXuatBan")
-		.lean();
+	const result = await Sach.aggregate([
+		{
+			$match: { _id: new mongoose.Types.ObjectId(id) },
+		},
+		{
+			$lookup: {
+				from: "bansaos",
+				localField: "_id",
+				foreignField: "sach",
+				as: "copies",
+			},
+		},
+		{
+			$addFields: {
+				soLuongBanSao: { $size: "$copies" },
+				soLuongKhaDung: {
+					$size: {
+						$filter: {
+							input: "$copies",
+							as: "copy",
+							cond: {
+								$eq: [
+									"$$copy.trangThai",
+									TrangThaiBanSao.AVAILABLE,
+								],
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			$project: {
+				copies: 0,
+			},
+		},
+	]);
 
-	if (!sach) {
+	if (!result || result.length === 0) {
 		throw new NotFoundException("Không tìm thấy sách.");
 	}
+
+	const sach = result[0];
+	await Sach.populate(sach, [
+		{ path: "tacGia" },
+		{ path: "danhMuc" },
+		{ path: "nhaXuatBan" },
+	]);
 
 	return sach as ISach;
 }
@@ -86,17 +141,11 @@ export async function muonSach(params: { docGiaId: string; sachId: string }) {
 	session.startTransaction();
 
 	try {
-		// Reserve the copy by setting it to BORROWED
-		const banSao = await BanSao.findOneAndUpdate(
-			{
-				sach: sachId,
-				trangThai: TrangThaiBanSao.AVAILABLE,
-			},
-			{
-				trangThai: TrangThaiBanSao.BORROWED,
-			},
-			{ new: true, session: session }
-		);
+		// UPDATED: Check for availability ONLY. Do not set to BORROWED yet.
+		const banSao = await BanSao.findOne({
+			sach: sachId,
+			trangThai: TrangThaiBanSao.AVAILABLE,
+		}).session(session);
 
 		if (!banSao) {
 			throw new ConflictException(
@@ -109,7 +158,7 @@ export async function muonSach(params: { docGiaId: string; sachId: string }) {
 			docGia: docGiaId,
 			banSao: banSao._id,
 			ngayMuon: new Date(),
-			trangThai: TrangThaiMuon.DANG_CHO, // Default to Pending
+			trangThai: TrangThaiMuon.DANG_CHO,
 		});
 
 		await phieuMuon.save({ session });

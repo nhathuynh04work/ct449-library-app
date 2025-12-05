@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { Search, CheckCircle, XCircle, Clock, RotateCcw, MoreHorizontal } from "lucide-vue-next";
+import {
+    Search,
+    CheckCircle,
+    XCircle,
+    Clock,
+    RotateCcw,
+    MoreHorizontal,
+    Ban,
+} from "lucide-vue-next";
 import NeoButton from "@/components/ui/NeoButton.vue";
 import NeoSelect from "@/components/ui/NeoSelect.vue";
 import { useLoans } from "@/features/loans/queries";
@@ -19,12 +27,14 @@ const showConfirm = ref(false);
 const selectedLoan = ref<TheoDoiMuonSach | null>(null);
 const actionType = ref<"APPROVE" | "REJECT" | "RETURN">("APPROVE");
 
+// Updated Options
 const statusOptions = [
     { value: "ALL", label: "Tất cả trạng thái" },
     { value: "DANG_CHO", label: "Chờ duyệt" },
     { value: "DANG_MUON", label: "Đang mượn" },
     { value: "DA_TRA", label: "Đã trả" },
     { value: "DA_TU_CHOI", label: "Đã từ chối" },
+    { value: "DA_HUY", label: "Đã hủy" },
 ];
 
 const filteredLoans = computed(() => {
@@ -67,10 +77,10 @@ const confirmAction = () => {
                 showConfirm.value = false;
                 selectedLoan.value = null;
             },
-            onError: () => {
+            onError: (err) => {
                 addToast({
                     title: "Lỗi",
-                    description: "Không thể cập nhật trạng thái.",
+                    description: err.message || "Không thể cập nhật trạng thái.",
                     variant: "error",
                 });
             },
@@ -80,6 +90,7 @@ const confirmAction = () => {
 
 const formatDate = (date: string) => new Date(date).toLocaleDateString("vi-VN");
 
+// Updated Badge Logic
 const getStatusBadge = (status: string) => {
     switch (status) {
         case "DANG_CHO":
@@ -105,6 +116,12 @@ const getStatusBadge = (status: string) => {
                 class: "bg-red-100 text-red-800 border-red-300",
                 label: "Đã từ chối",
                 icon: XCircle,
+            };
+        case "DA_HUY":
+            return {
+                class: "bg-gray-100 text-gray-500 border-gray-300",
+                label: "Đã hủy",
+                icon: Ban,
             };
         default:
             return { class: "bg-gray-100", label: status, icon: MoreHorizontal };
@@ -249,10 +266,10 @@ const getStatusBadge = (status: string) => {
             "
             :description="
                 actionType === 'APPROVE'
-                    ? 'Xác nhận cho độc giả mượn cuốn sách này?'
+                    ? 'Xác nhận cho độc giả mượn cuốn sách này? Hệ thống sẽ khóa bản sao.'
                     : actionType === 'REJECT'
-                      ? 'Từ chối yêu cầu mượn sách này? Sách sẽ được mở lại kho.'
-                      : 'Xác nhận độc giả đã trả sách? Sách sẽ được cập nhật trạng thái có sẵn.'
+                      ? 'Từ chối yêu cầu mượn sách này?'
+                      : 'Xác nhận độc giả đã trả sách? Sách sẽ được mở lại kho.'
             "
             :variant="actionType === 'REJECT' ? 'danger' : 'info'"
             @close="showConfirm = false"

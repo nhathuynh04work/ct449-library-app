@@ -1,27 +1,51 @@
 <script setup lang="ts">
-import { AlertTriangle, X, Loader2 } from "lucide-vue-next";
+import { AlertTriangle, X, Loader2, Info, CheckCircle } from "lucide-vue-next";
 import NeoButton from "./NeoButton.vue";
 
 defineProps<{
     title: string;
-    description: string;
-    variant?: "danger" | "warning" | "info";
-    processing?: boolean; // New prop
+    description?: string;
+    variant?: "danger" | "warning" | "info" | "success" | "primary";
+    processing?: boolean;
 }>();
 
 defineEmits(["close", "confirm"]);
+
+const getVariantStyles = (variant: string = "info") => {
+    switch (variant) {
+        case "danger":
+            return { header: "bg-red-400", icon: AlertTriangle, btn: "danger" };
+        case "warning":
+            return { header: "bg-yellow-400", icon: AlertTriangle, btn: "secondary" };
+        case "success":
+            return { header: "bg-green-400", icon: CheckCircle, btn: "primary" };
+        case "primary":
+            return { header: "bg-blue-400", icon: Info, btn: "primary" };
+        case "info":
+        default:
+            return { header: "bg-gray-200", icon: Info, btn: "secondary" };
+    }
+};
 </script>
 
 <template>
     <div
-        class="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+        class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
         @click.self="!processing && $emit('close')"
     >
         <div
             class="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] w-full max-w-md relative animate-in"
         >
-            <div class="bg-red-400 p-4 border-b-4 border-black flex items-center gap-3">
-                <AlertTriangle :size="24" class="text-black" stroke-width="3" />
+            <div
+                class="p-4 border-b-4 border-black flex items-center gap-3"
+                :class="getVariantStyles(variant).header"
+            >
+                <component
+                    :is="getVariantStyles(variant).icon"
+                    :size="24"
+                    class="text-black"
+                    stroke-width="3"
+                />
                 <h2 class="text-xl font-black uppercase font-display">{{ title }}</h2>
                 <button
                     v-if="!processing"
@@ -33,8 +57,10 @@ defineEmits(["close", "confirm"]);
             </div>
 
             <div class="p-6">
-                <p class="font-bold text-lg mb-2">Bạn có chắc chắn không?</p>
-                <p class="font-medium text-gray-600">{{ description }}</p>
+                <p v-if="description" class="font-bold text-lg mb-2">{{ description }}</p>
+                <div class="font-medium text-gray-600">
+                    <slot />
+                </div>
             </div>
 
             <div class="p-4 border-t-4 border-black bg-gray-50 flex justify-end gap-3">
@@ -47,7 +73,7 @@ defineEmits(["close", "confirm"]);
                 </button>
                 <NeoButton
                     @click="$emit('confirm')"
-                    variant="danger"
+                    :variant="getVariantStyles(variant).btn as any"
                     class="flex items-center gap-2"
                     :disabled="processing"
                 >

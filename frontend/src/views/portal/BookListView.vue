@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import {
     Search,
@@ -8,6 +8,7 @@ import {
     Image as ImageIcon,
     Filter,
     ArrowRight,
+    BookOpen,
 } from "lucide-vue-next";
 import NeoButton from "@/components/ui/NeoButton.vue";
 import NeoInput from "@/components/ui/NeoInput.vue";
@@ -32,6 +33,11 @@ const selectedAuthor = ref("");
 const selectedCategory = ref("");
 const showConfirm = ref(false);
 const selectedBook = ref<Sach | null>(null);
+const isLoggedIn = ref(false);
+
+onMounted(() => {
+    isLoggedIn.value = !!localStorage.getItem("token");
+});
 
 const authorOptions = computed(() => [
     { value: "", label: "Tất cả tác giả" },
@@ -226,15 +232,45 @@ const getRandomColor = (id: string) => {
                                     {{ book.danhMuc.map((dm) => dm.tenDanhMuc).join(", ") }}
                                 </span>
                             </div>
+
+                            <div
+                                v-if="isLoggedIn"
+                                class="flex items-center gap-2 mt-2 pt-2 border-t border-dashed border-gray-300"
+                            >
+                                <div
+                                    class="w-2 h-2 rounded-full"
+                                    :class="
+                                        (book.soLuongKhaDung || 0) > 0
+                                            ? 'bg-green-500'
+                                            : 'bg-red-500'
+                                    "
+                                ></div>
+                                <span class="text-xs font-bold uppercase text-gray-600">
+                                    Có sẵn:
+                                    <span class="text-black text-sm">{{
+                                        book.soLuongKhaDung || 0
+                                    }}</span>
+                                </span>
+                            </div>
                         </div>
 
                         <NeoButton
                             class="w-full text-sm py-3 flex justify-center items-center gap-2 group-hover:bg-yellow-400 transition-colors"
                             variant="primary"
                             @click="confirmBorrow(book)"
-                            :disabled="isBorrowing"
+                            :disabled="
+                                isBorrowing || (isLoggedIn && (book.soLuongKhaDung || 0) <= 0)
+                            "
                         >
-                            ĐĂNG KÝ MƯỢN <ArrowRight :size="16" />
+                            {{
+                                isLoggedIn && (book.soLuongKhaDung || 0) <= 0
+                                    ? "HẾT HÀNG"
+                                    : "ĐĂNG KÝ MƯỢN"
+                            }}
+                            <ArrowRight
+                                v-if="!(isLoggedIn && (book.soLuongKhaDung || 0) <= 0)"
+                                :size="16"
+                            />
                         </NeoButton>
                     </div>
                 </div>
@@ -244,10 +280,37 @@ const getRandomColor = (id: string) => {
         <NeoConfirmModal
             v-if="showConfirm"
             title="Xác nhận mượn sách"
-            :description="`Bạn có chắc chắn muốn đăng ký mượn cuốn '${selectedBook?.tenSach}' không?`"
-            variant="info"
+            variant="success"
+            :processing="isBorrowing"
             @close="showConfirm = false"
             @confirm="handleBorrow"
-        />
+        >
+            <div class="space-y-3">
+                <p>Bạn đang đăng ký mượn cuốn sách sau:</p>
+                <div class="bg-yellow-50 border-2 border-black p-3 flex gap-4">
+                    <div
+                        class="w-16 h-20 bg-gray-200 border-2 border-black flex items-center justify-center shrink-0"
+                    >
+                        <BookOpen :size="24" class="text-gray-400" />
+                    </div>
+                    <div>
+                        <p class="font-black text-lg uppercase leading-tight line-clamp-2">
+                            {{ selectedBook?.tenSach }}
+                        </p>
+                        <p class="text-sm font-medium text-gray-600 line-clamp-1">
+                            {{ selectedBook?.tacGia.map((t) => t.tenTacGia).join(", ") }}
+                        </p>
+                        <p
+                            class="text-xs font-mono font-bold mt-1 bg-white inline-block px-1 border border-black"
+                        >
+                            {{ selectedBook?.maSach }}
+                        </p>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-500 italic">
+                    Vui lòng đến thư viện nhận sách sau khi yêu cầu được duyệt.
+                </p>
+            </div>
+        </NeoConfirmModal>
     </div>
 </template>

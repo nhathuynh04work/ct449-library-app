@@ -1,6 +1,6 @@
 import { TrangThaiBanSao } from "@/constants/trangThaiBanSao.js";
 import { NotFoundException } from "@/errors/not-found.js";
-import { BadRequestException } from "@/errors/bad-request.js"; // Import this
+import { BadRequestException } from "@/errors/bad-request.js";
 import { BanSao } from "@/models/BanSao.js";
 import {
 	TheoDoiMuonSach,
@@ -18,7 +18,7 @@ export async function getHistoryByDocGia(docGiaId: string) {
 				select: "tenSach namXuatBan maSach",
 			},
 		})
-		.sort({ createdAt: -1 }); // Sorted by creation time usually better for history
+		.sort({ createdAt: -1 });
 
 	return history;
 }
@@ -41,21 +41,46 @@ export async function updateLoanStatus(id: string, status: TrangThaiMuonType) {
 		const loan = await TheoDoiMuonSach.findById(id).session(session);
 		if (!loan) throw new NotFoundException("Không tìm thấy phiếu mượn.");
 
-		// If Returning, Rejecting, or Cancelling, release the Book Copy
+		const previousStatus = loan.trangThai;
+
+		// --- APPROVING REQUEST ---
 		if (
+			status === TrangThaiMuon.DANG_MUON &&
+			previousStatus === TrangThaiMuon.DANG_CHO
+		) {
+			// Attempt to lock the copy. It must be AVAILABLE.
+			const updatedCopy = await BanSao.findOneAndUpdate(
+				{ _id: loan.banSao, trangThai: TrangThaiBanSao.AVAILABLE },
+				{ trangThai: TrangThaiBanSao.BORROWED },
+				{ session, new: true }
+			);
+
+			if (!updatedCopy) {
+				throw new BadRequestException(
+					"Bản sao này không còn khả dụng (đã bị mượn hoặc hư hỏng)."
+				);
+			}
+		}
+
+		// --- RETURNING / REJECTING / CANCELLING ---
+		else if (
 			status === TrangThaiMuon.DA_TRA ||
 			status === TrangThaiMuon.DA_TU_CHOI ||
 			status === TrangThaiMuon.DA_HUY
 		) {
-			await BanSao.findByIdAndUpdate(
-				loan.banSao,
-				{ trangThai: TrangThaiBanSao.AVAILABLE },
-				{ session }
-			);
+			// Only release the book if it was actually borrowed (locked)
+			if (previousStatus === TrangThaiMuon.DANG_MUON) {
+				await BanSao.findByIdAndUpdate(
+					loan.banSao,
+					{ trangThai: TrangThaiBanSao.AVAILABLE },
+					{ session }
+				);
 
-			if (status === TrangThaiMuon.DA_TRA) {
-				loan.ngayTra = new Date();
+				if (status === TrangThaiMuon.DA_TRA) {
+					loan.ngayTra = new Date();
+				}
 			}
+			// If previousStatus was DANG_CHO, the book is already AVAILABLE, so no action needed on BanSao.
 		}
 
 		loan.trangThai = status;
@@ -84,6 +109,5 @@ export async function cancelLoanByUser(userId: string, loanId: string) {
 		);
 	}
 
-	// Reuse the logic to update status and release copy
 	return await updateLoanStatus(loanId, TrangThaiMuon.DA_HUY);
 }
