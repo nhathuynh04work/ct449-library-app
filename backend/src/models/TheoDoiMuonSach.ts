@@ -3,12 +3,23 @@ import { Counter } from "./Counter.js";
 import type { IDocGia } from "./DocGia.js";
 import type { IBanSao } from "./BanSao.js";
 
+export const TrangThaiMuon = {
+	DANG_CHO: "DANG_CHO", // Pending Approval
+	DANG_MUON: "DANG_MUON", // Active / Approved
+	DA_TRA: "DA_TRA", // Returned
+	DA_TU_CHOI: "DA_TU_CHOI", // Rejected
+} as const;
+
+export type TrangThaiMuonType =
+	(typeof TrangThaiMuon)[keyof typeof TrangThaiMuon];
+
 export interface ITheoDoiMuonSach {
 	maPhieuMuon: string;
 	docGia: Schema.Types.ObjectId | IDocGia;
 	banSao: Schema.Types.ObjectId | IBanSao;
 	ngayMuon: Date;
 	ngayTra?: Date | null;
+	trangThai: TrangThaiMuonType; // Added field
 
 	createdAt?: Date;
 	updatedAt?: Date;
@@ -41,6 +52,12 @@ const theoDoiMuonSachSchema = new Schema<ITheoDoiMuonSach>(
 		ngayTra: {
 			type: Date,
 			default: null,
+		},
+		trangThai: {
+			type: String,
+			enum: Object.values(TrangThaiMuon),
+			default: TrangThaiMuon.DANG_CHO,
+			required: true,
 		},
 	},
 	{ timestamps: true }

@@ -3,6 +3,8 @@ import BookListView from "@/views/portal/BookListView.vue";
 import LoginView from "@/views/LoginView.vue";
 import RegisterView from "@/views/RegisterView.vue";
 import DashboardView from "@/views/admin/DashboardView.vue";
+import BookDetailView from "@/views/portal/BookDetailView.vue";
+import BorrowHistoryView from "@/views/portal/BorrowHistoryView.vue";
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -27,6 +29,18 @@ const router = createRouter({
             path: "/admin/dashboard",
             name: "admin-dashboard",
             component: DashboardView,
+            meta: { requiresAuth: true },
+        },
+        {
+            path: "/portal/books/:id",
+            name: "book-detail",
+            component: BookDetailView,
+            meta: { requiresAuth: true },
+        },
+        {
+            path: "/portal/history",
+            name: "borrow-history",
+            component: BorrowHistoryView,
             meta: { requiresAuth: true },
         },
         {

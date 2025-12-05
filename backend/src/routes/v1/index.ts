@@ -7,6 +7,7 @@ import nhaXuatBanRoutes from "./nhaXuatBan.routes.js";
 import sachRoutes from "./sach.routes.js";
 import banSaoRoutes from "./banSao.routes.js";
 import authRoutes from "./auth.routes.js";
+import theoDoiMuonSachRoutes from "./theoDoiMuonSach.routes.js";
 
 const router = Router();
 
@@ -17,6 +18,7 @@ router.use("/tacgia", tacGiaRoutes);
 router.use("/nhaxuatban", nhaXuatBanRoutes);
 router.use("/sach", sachRoutes);
 router.use("/bansao", banSaoRoutes);
+router.use("/tracking", theoDoiMuonSachRoutes);
 router.use("/auth", authRoutes);
 
 export default router;

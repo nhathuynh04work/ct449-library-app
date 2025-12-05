@@ -3,7 +3,7 @@ import { ConflictException } from "@/errors/conflict.js";
 import { NotFoundException } from "@/errors/not-found.js";
 import { BanSao } from "@/models/BanSao.js";
 import { Sach, type ISach } from "@/models/Sach.js";
-import { TheoDoiMuonSach } from "@/models/TheoDoiMuonSach.js";
+import { TheoDoiMuonSach, TrangThaiMuon } from "@/models/TheoDoiMuonSach.js";
 import type {
 	CreateSachPayload,
 	UpdateSachPayload,
@@ -86,6 +86,7 @@ export async function muonSach(params: { docGiaId: string; sachId: string }) {
 	session.startTransaction();
 
 	try {
+		// Reserve the copy by setting it to BORROWED
 		const banSao = await BanSao.findOneAndUpdate(
 			{
 				sach: sachId,
@@ -103,10 +104,12 @@ export async function muonSach(params: { docGiaId: string; sachId: string }) {
 			);
 		}
 
+		// Create record with PENDING status
 		const phieuMuon = new TheoDoiMuonSach({
 			docGia: docGiaId,
 			banSao: banSao._id,
 			ngayMuon: new Date(),
+			trangThai: TrangThaiMuon.DANG_CHO, // Default to Pending
 		});
 
 		await phieuMuon.save({ session });

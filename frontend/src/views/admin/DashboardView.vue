@@ -19,6 +19,7 @@ import Logo from "@/assets/logo-icon-and-text.svg";
 import { getUserFromLocalStorage } from "@/lib/utils/getUserFromLocalStorage";
 import BookManager from "./BookManager.vue";
 import ResourceManager from "./ResourceManager.vue";
+import LoanManager from "./LoanManager.vue";
 
 const router = useRouter();
 const activeTab = ref("overview");
@@ -294,6 +295,10 @@ const handleLogout = () => {
 
             <div v-else-if="activeTab === 'resources'" class="animate-in">
                 <ResourceManager />
+            </div>
+
+            <div v-else-if="activeTab === 'loans'" class="animate-in">
+                <LoanManager />
             </div>
 
             <div

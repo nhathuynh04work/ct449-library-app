@@ -22,3 +22,14 @@ export function useCreateBook() {
         },
     });
 }
+
+export function useBorrowBook() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (id: string) => booksApi.borrow(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["books"] });
+        },
+    });
+}
