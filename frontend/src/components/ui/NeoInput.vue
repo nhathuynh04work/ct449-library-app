@@ -1,6 +1,6 @@
 <script setup lang="ts">
 defineProps<{
-    label: string;
+    label?: string; // Made optional
     id: string;
     type?: string;
     modelValue: string | number;
@@ -12,7 +12,7 @@ defineEmits(["update:modelValue"]);
 
 <template>
     <div class="flex flex-col gap-1">
-        <label :for="id" class="font-bold text-sm ml-1">{{ label }}</label>
+        <label v-if="label" :for="id" class="font-bold text-sm ml-1">{{ label }}</label>
         <input
             :id="id"
             :type="type || 'text'"

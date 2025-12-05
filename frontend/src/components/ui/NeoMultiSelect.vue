@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
-import { Check, ChevronDown, X } from "lucide-vue-next";
+import { ref, onMounted, onUnmounted, computed } from "vue";
+import { Check, ChevronDown, X, Search } from "lucide-vue-next";
 import { useSmartPosition } from "@/composables/useSmartPosition";
 
 export interface SelectOption {
@@ -19,12 +19,21 @@ const props = defineProps<{
 const emit = defineEmits(["update:modelValue"]);
 
 const isOpen = ref(false);
+const searchQuery = ref(""); // New search state
 const dropdownRef = ref<HTMLDivElement | null>(null);
 const { position, calculatePosition } = useSmartPosition();
+
+// Filter options based on search query
+const filteredOptions = computed(() => {
+    if (!searchQuery.value) return props.options;
+    const query = searchQuery.value.toLowerCase();
+    return props.options.filter((opt) => opt.label.toLowerCase().includes(query));
+});
 
 const toggleDropdown = () => {
     if (!isOpen.value) {
         calculatePosition(dropdownRef.value);
+        searchQuery.value = ""; // Reset search when opening
     }
     isOpen.value = !isOpen.value;
 };
@@ -56,7 +65,7 @@ onUnmounted(() => document.removeEventListener("click", handleClickOutside));
 </script>
 
 <template>
-    <div class="flex flex-col gap-1" ref="dropdownRef">
+    <div class="flex flex-col gap-1 w-full" ref="dropdownRef">
         <label v-if="label" :for="id" class="font-bold text-sm ml-1 font-display">{{
             label
         }}</label>
@@ -72,6 +81,7 @@ onUnmounted(() => document.removeEventListener("click", handleClickOutside));
                         v-for="val in modelValue"
                         :key="val"
                         class="bg-yellow-200 border border-black px-2 py-1 text-xs font-bold flex items-center gap-1"
+                        @click.stop
                     >
                         {{ options.find((o) => o.value === val)?.label }}
                         <button @click="(e) => removeItem(e, val)" class="hover:text-red-600">
@@ -90,21 +100,43 @@ onUnmounted(() => document.removeEventListener("click", handleClickOutside));
 
             <div
                 v-if="isOpen"
-                class="absolute left-0 right-0 border-2 border-black bg-white z-50 shadow-neo max-h-60 overflow-y-auto"
+                class="absolute left-0 right-0 border-2 border-black bg-white z-50 shadow-neo max-h-80 flex flex-col"
                 :class="position === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'"
             >
-                <div
-                    v-for="opt in options"
-                    :key="opt.value"
-                    @click="toggleOption(opt.value)"
-                    class="p-3 hover:bg-gray-100 cursor-pointer flex items-center justify-between font-medium text-sm"
-                    :class="{ 'bg-blue-50': modelValue.includes(opt.value) }"
-                >
-                    {{ opt.label }}
-                    <Check v-if="modelValue.includes(opt.value)" :size="16" class="text-blue-600" />
+                <div class="p-2 border-b-2 border-gray-100 sticky top-0 bg-white z-10">
+                    <div class="relative">
+                        <Search class="absolute left-2 top-2 text-gray-400" :size="16" />
+                        <input
+                            v-model="searchQuery"
+                            type="text"
+                            placeholder="Tìm kiếm..."
+                            class="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-300 rounded text-sm outline-none focus:border-black transition-colors"
+                            @click.stop
+                        />
+                    </div>
                 </div>
-                <div v-if="options.length === 0" class="p-3 text-gray-500 text-sm text-center">
-                    Không có dữ liệu
+
+                <div class="overflow-y-auto flex-1">
+                    <div
+                        v-for="opt in filteredOptions"
+                        :key="opt.value"
+                        @click="toggleOption(opt.value)"
+                        class="p-3 hover:bg-gray-100 cursor-pointer flex items-center justify-between font-medium text-sm"
+                        :class="{ 'bg-blue-50': modelValue.includes(opt.value) }"
+                    >
+                        {{ opt.label }}
+                        <Check
+                            v-if="modelValue.includes(opt.value)"
+                            :size="16"
+                            class="text-blue-600"
+                        />
+                    </div>
+                    <div
+                        v-if="filteredOptions.length === 0"
+                        class="p-4 text-gray-500 text-sm text-center"
+                    >
+                        Không tìm thấy kết quả
+                    </div>
                 </div>
             </div>
         </div>

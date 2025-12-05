@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { ArrowLeft, User, Tag, BookOpen, Calendar, LogIn } from "lucide-vue-next";
+import { ArrowLeft, User, Tag, BookOpen, Calendar, LogIn, Building, Info } from "lucide-vue-next";
 import NeoButton from "@/components/ui/NeoButton.vue";
 import { useBook } from "@/features/books/queries";
 import { useBorrowBook } from "@/features/books/mutations";
@@ -41,7 +41,7 @@ const handleBorrow = () => {
             });
             showConfirm.value = false;
         },
-        onError: (err: Error) => {
+        onError: (err) => {
             addToast({ title: "Lỗi", description: err.message, variant: "error" });
             showConfirm.value = false;
         },
@@ -55,128 +55,208 @@ const getRandomColor = (id: string) => {
 </script>
 
 <template>
-    <div class="w-full max-w-4xl mx-auto space-y-6">
-        <button @click="router.back()" class="flex items-center gap-2 font-bold hover:underline">
-            <ArrowLeft :size="20" /> Quay lại danh sách
-        </button>
-
-        <div v-if="isLoading" class="text-center py-20 text-xl font-bold">
-            Đang tải thông tin sách...
+    <div class="w-full max-w-5xl mx-auto space-y-8 pb-10">
+        <div class="flex justify-start">
+            <NeoButton @click="router.back()" variant="secondary" class="flex items-center gap-2">
+                <ArrowLeft :size="20" /> Quay lại danh sách
+            </NeoButton>
         </div>
-        <div v-else-if="isError || !book" class="text-center py-20 text-red-500 font-bold">
-            Không tìm thấy sách.
+
+        <div
+            v-if="isLoading"
+            class="flex flex-col items-center justify-center py-20 bg-white border-4 border-black shadow-neo"
+        >
+            <div
+                class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-black mb-4"
+            ></div>
+            <p class="font-black text-xl uppercase font-display">Đang tải thông tin sách...</p>
+        </div>
+
+        <div
+            v-else-if="isError || !book"
+            class="bg-red-100 border-4 border-black p-10 text-center shadow-neo"
+        >
+            <h2 class="text-3xl font-black text-red-600 uppercase mb-2">Không tìm thấy sách</h2>
+            <p class="font-bold text-black">Cuốn sách này không tồn tại hoặc đã bị xóa.</p>
+            <NeoButton @click="router.push('/portal/books')" variant="danger" class="mt-6">
+                Về trang chủ
+            </NeoButton>
         </div>
 
         <div
             v-else
-            class="bg-white border-4 border-black shadow-neo grid grid-cols-1 md:grid-cols-3"
+            class="bg-white border-4 border-black shadow-neo grid grid-cols-1 md:grid-cols-12 relative"
         >
             <div
-                class="md:col-span-1 border-b-4 md:border-b-0 md:border-r-4 border-black min-h-[300px] flex items-center justify-center relative overflow-hidden bg-gray-100"
+                class="absolute -top-4 -right-4 z-10 bg-black text-white font-mono font-bold text-lg px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] rotate-2"
+            >
+                {{ book.maSach }}
+            </div>
+
+            <div
+                class="md:col-span-5 lg:col-span-4 border-b-4 md:border-b-0 md:border-r-4 border-black min-h-[400px] md:min-h-[500px] flex items-center justify-center relative overflow-hidden bg-gray-100 p-8"
                 :class="!book.hinhAnh ? getRandomColor(book._id) : ''"
             >
-                <img
-                    v-if="book.hinhAnh"
-                    :src="book.hinhAnh"
-                    :alt="book.tenSach"
-                    class="w-full h-full object-cover"
-                />
-                <BookOpen v-else :size="80" class="text-black/20" />
-
                 <div
-                    class="absolute bottom-4 left-4 bg-white border-2 border-black px-3 py-1 font-mono font-bold text-sm shadow-neo-sm"
+                    class="relative w-full h-full border-4 border-black bg-white shadow-neo-sm transform transition-transform hover:-rotate-1"
                 >
-                    {{ book.maSach }}
+                    <img
+                        v-if="book.hinhAnh"
+                        :src="book.hinhAnh"
+                        :alt="book.tenSach"
+                        class="w-full h-full object-cover"
+                    />
+                    <div v-else class="w-full h-full flex items-center justify-center bg-gray-50">
+                        <BookOpen :size="80" class="text-gray-300" stroke-width="1.5" />
+                    </div>
                 </div>
             </div>
 
-            <div class="md:col-span-2 p-8 flex flex-col">
-                <h1 class="text-4xl font-black font-display uppercase mb-4 leading-tight">
+            <div class="md:col-span-7 lg:col-span-8 p-6 md:p-10 flex flex-col">
+                <h1
+                    class="text-4xl md:text-5xl font-black font-display uppercase mb-6 leading-tight tracking-tight"
+                >
                     {{ book.tenSach }}
                 </h1>
 
-                <p class="text-gray-600 mb-6 italic" v-if="book.moTa">
-                    {{ book.moTa }}
-                </p>
+                <div class="mb-8 bg-yellow-50 border-2 border-black p-5 shadow-neo-sm relative">
+                    <div
+                        class="absolute -top-3 -left-2 bg-yellow-300 border-2 border-black px-2 py-0.5 text-xs font-black uppercase"
+                    >
+                        Giới thiệu
+                    </div>
+                    <p
+                        v-if="book.moTa"
+                        class="font-medium text-gray-800 leading-relaxed text-justify"
+                    >
+                        {{ book.moTa }}
+                    </p>
+                    <div v-else class="flex items-center gap-2 text-gray-500 italic font-medium">
+                        <Info :size="18" /> Chưa có mô tả cho sách này.
+                    </div>
+                </div>
 
-                <div class="space-y-4 mb-8 flex-1">
-                    <div class="flex items-start gap-3">
-                        <User :size="20" class="shrink-0 mt-1" />
-                        <div>
-                            <span class="font-bold block text-sm text-gray-500 uppercase"
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                    <div
+                        class="bg-blue-50 border-2 border-black p-3 flex items-center gap-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-px hover:translate-y-px hover:shadow-none transition-all"
+                    >
+                        <div class="bg-blue-300 border-2 border-black p-2 shrink-0">
+                            <User :size="20" class="text-black" stroke-width="2.5" />
+                        </div>
+                        <div class="overflow-hidden">
+                            <span
+                                class="block text-[10px] font-black uppercase text-blue-800 mb-0.5"
                                 >Tác giả</span
                             >
-                            <span class="text-lg font-medium">{{
-                                book.tacGia.map((t) => t.tenTacGia).join(", ")
-                            }}</span>
+                            <span
+                                class="font-bold text-black truncate block"
+                                :title="book.tacGia.map((t) => t.tenTacGia).join(', ')"
+                            >
+                                {{ book.tacGia.map((t) => t.tenTacGia).join(", ") }}
+                            </span>
                         </div>
                     </div>
 
-                    <div class="flex items-start gap-3">
-                        <Tag :size="20" class="shrink-0 mt-1" />
+                    <div
+                        class="bg-green-50 border-2 border-black p-3 flex items-center gap-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-px hover:translate-y-px hover:shadow-none transition-all"
+                    >
+                        <div class="bg-green-300 border-2 border-black p-2 shrink-0">
+                            <Building :size="20" class="text-black" stroke-width="2.5" />
+                        </div>
+                        <div class="overflow-hidden">
+                            <span
+                                class="block text-[10px] font-black uppercase text-green-800 mb-0.5"
+                                >Nhà Xuất Bản</span
+                            >
+                            <span class="font-bold text-black truncate block">
+                                {{ (book.nhaXuatBan as any)?.tenNhaXuatBan || "—" }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-pink-50 border-2 border-black p-3 flex items-center gap-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-px hover:translate-y-px hover:shadow-none transition-all"
+                    >
+                        <div class="bg-pink-300 border-2 border-black p-2 shrink-0">
+                            <Calendar :size="20" class="text-black" stroke-width="2.5" />
+                        </div>
                         <div>
-                            <span class="font-bold block text-sm text-gray-500 uppercase"
+                            <span
+                                class="block text-[10px] font-black uppercase text-pink-800 mb-0.5"
+                                >Năm Xuất Bản</span
+                            >
+                            <span class="font-bold text-black">{{ book.namXuatBan }}</span>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-white border-2 border-black p-3 flex items-center gap-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                    >
+                        <div class="bg-gray-200 border-2 border-black p-2 shrink-0">
+                            <Tag :size="20" class="text-black" stroke-width="2.5" />
+                        </div>
+                        <div class="flex-1 overflow-hidden">
+                            <span class="block text-[10px] font-black uppercase text-gray-600 mb-1"
                                 >Thể loại</span
                             >
-                            <div class="flex gap-2 mt-1">
+                            <div class="flex flex-wrap gap-1">
                                 <span
-                                    v-for="dm in book.danhMuc"
+                                    v-for="dm in book.danhMuc.slice(0, 2)"
                                     :key="dm._id"
-                                    class="bg-gray-100 border border-black px-2 py-0.5 text-xs font-bold"
+                                    class="text-xs font-bold bg-black text-white px-1.5 py-0.5"
                                 >
                                     {{ dm.tenDanhMuc }}
+                                </span>
+                                <span
+                                    v-if="book.danhMuc.length > 2"
+                                    class="text-xs font-bold text-gray-500"
+                                >
+                                    +{{ book.danhMuc.length - 2 }}
                                 </span>
                             </div>
                         </div>
                     </div>
-
-                    <div class="flex items-start gap-3">
-                        <Calendar :size="20" class="shrink-0 mt-1" />
-                        <div>
-                            <span class="font-bold block text-sm text-gray-500 uppercase"
-                                >Năm xuất bản</span
-                            >
-                            <span class="text-lg font-medium">{{ book.namXuatBan }}</span>
-                        </div>
-                    </div>
                 </div>
 
                 <div
-                    class="pt-6 border-t-2 border-black border-dashed flex justify-between items-center"
+                    class="mt-auto pt-6 border-t-4 border-black flex flex-col sm:flex-row justify-between items-center gap-4"
                 >
-                    <div class="flex items-center gap-2">
-                        <template v-if="isLoggedIn">
-                            <div
-                                class="w-3 h-3 rounded-full"
-                                :class="
-                                    (book.soLuongKhaDung || 0) > 0 ? 'bg-green-500' : 'bg-red-500'
-                                "
-                            ></div>
-                            <span class="font-bold text-sm">
-                                {{
-                                    (book.soLuongKhaDung || 0) > 0
-                                        ? `Có sẵn ${book.soLuongKhaDung} cuốn`
-                                        : "Tạm hết hàng"
-                                }}
+                    <div
+                        class="flex items-center gap-3 bg-white px-4 py-2 border-2 border-black shadow-neo-sm w-full sm:w-auto justify-center sm:justify-start"
+                    >
+                        <div
+                            class="w-4 h-4 rounded-full border-2 border-black"
+                            :class="(book.soLuongKhaDung || 0) > 0 ? 'bg-green-500' : 'bg-red-500'"
+                        ></div>
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-bold uppercase text-gray-500 leading-none"
+                                >Tình trạng kho</span
+                            >
+                            <span class="font-black text-sm uppercase">
+                                {{ (book.soLuongKhaDung || 0) > 0 ? "Sẵn sàng" : "Hết hàng" }}
+                                <span class="font-mono text-lg ml-1"
+                                    >({{ book.soLuongKhaDung }})</span
+                                >
                             </span>
-                        </template>
-                        <span v-else class="text-gray-400 font-bold text-sm italic">
-                            Bạn chưa đăng nhập
-                        </span>
+                        </div>
                     </div>
 
                     <NeoButton
                         variant="primary"
+                        class="w-full sm:w-auto min-w-[200px] text-lg py-4 flex justify-center"
                         :disabled="(isLoggedIn && (book.soLuongKhaDung || 0) <= 0) || isPending"
                         @click="handleMainAction"
                     >
                         <template v-if="!isLoggedIn">
                             <span class="flex items-center gap-2">
-                                <LogIn :size="18" /> Đăng nhập để mượn
+                                <LogIn :size="20" stroke-width="3" /> Đăng nhập để mượn
                             </span>
                         </template>
                         <template v-else>
-                            {{ isPending ? "Đang xử lý..." : "Đăng Ký Mượn" }}
+                            <span class="flex items-center gap-2">
+                                <BookOpen v-if="!isPending" :size="20" stroke-width="3" />
+                                {{ isPending ? "ĐANG XỬ LÝ..." : "ĐĂNG KÝ MƯỢN NGAY" }}
+                            </span>
                         </template>
                     </NeoButton>
                 </div>
@@ -191,11 +271,13 @@ const getRandomColor = (id: string) => {
             @close="showConfirm = false"
             @confirm="handleBorrow"
         >
-            <div class="space-y-3">
-                <p>Bạn đang đăng ký mượn cuốn sách sau:</p>
-                <div class="bg-yellow-50 border-2 border-black p-3 flex gap-4">
+            <div class="space-y-4">
+                <p class="font-medium text-gray-700">Bạn đang đăng ký mượn cuốn sách sau:</p>
+                <div
+                    class="bg-yellow-100 border-4 border-black p-4 flex gap-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                >
                     <div
-                        class="w-16 h-20 bg-gray-200 border-2 border-black flex items-center justify-center shrink-0 overflow-hidden"
+                        class="w-16 h-24 bg-white border-2 border-black flex items-center justify-center shrink-0 overflow-hidden"
                     >
                         <img
                             v-if="book?.hinhAnh"
@@ -205,21 +287,21 @@ const getRandomColor = (id: string) => {
                         <BookOpen v-else :size="24" class="text-gray-400" />
                     </div>
                     <div>
-                        <p class="font-black text-lg uppercase leading-tight line-clamp-2">
+                        <p class="font-black text-xl uppercase leading-tight line-clamp-2 mb-1">
                             {{ book?.tenSach }}
                         </p>
-                        <p class="text-sm font-medium text-gray-600 line-clamp-1">
+                        <p class="text-sm font-bold text-gray-600 line-clamp-1 mb-2">
                             {{ book?.tacGia.map((t) => t.tenTacGia).join(", ") }}
                         </p>
-                        <p
-                            class="text-xs font-mono font-bold mt-1 bg-white inline-block px-1 border border-black"
-                        >
+                        <span class="text-xs font-mono font-bold bg-black text-white px-2 py-1">
                             {{ book?.maSach }}
-                        </p>
+                        </span>
                     </div>
                 </div>
-                <p class="text-sm text-gray-500 italic">
-                    Vui lòng đến thư viện nhận sách sau khi yêu cầu được duyệt.
+                <p
+                    class="text-sm font-bold text-gray-500 italic mt-2 border-t-2 border-dashed border-gray-300 pt-2"
+                >
+                    * Vui lòng đến thư viện nhận sách sau khi yêu cầu được duyệt.
                 </p>
             </div>
         </NeoConfirmModal>

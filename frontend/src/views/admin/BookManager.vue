@@ -9,6 +9,7 @@ import {
     Loader2,
     Copy as CopyIcon,
     BookOpen,
+    Image as ImageIcon,
 } from "lucide-vue-next";
 import NeoButton from "@/components/ui/NeoButton.vue";
 import NeoConfirmModal from "@/components/ui/NeoConfirmModal.vue";
@@ -75,7 +76,7 @@ const confirmDelete = () => {
             });
             deleteId.value = null;
         },
-        onError: (err: Error) => {
+        onError: (err) => {
             addToast({
                 title: "Lỗi",
                 description: err.message || "Không thể xóa sách.",
@@ -140,33 +141,28 @@ const getCategoryColor = (index: number): string => {
                     <thead>
                         <tr class="bg-yellow-300 border-b-4 border-black text-black">
                             <th
-                                class="p-4 border-r-2 border-black font-black uppercase tracking-wide w-24"
+                                class="p-4 border-r-2 border-black font-black uppercase w-20 text-center"
                             >
+                                Ảnh
+                            </th>
+                            <th class="p-4 border-r-2 border-black font-black uppercase w-24">
                                 Mã
                             </th>
-                            <th
-                                class="p-4 border-r-2 border-black font-black uppercase tracking-wide"
-                            >
+                            <th class="p-4 border-r-2 border-black font-black uppercase">
                                 Thông tin Sách
                             </th>
-                            <th
-                                class="p-4 border-r-2 border-black font-black uppercase tracking-wide w-48"
-                            >
+                            <th class="p-4 border-r-2 border-black font-black uppercase w-48">
                                 Tác giả & NXB
                             </th>
-                            <th
-                                class="p-4 border-r-2 border-black font-black uppercase tracking-wide w-48"
-                            >
+                            <th class="p-4 border-r-2 border-black font-black uppercase w-40">
                                 Danh mục
                             </th>
                             <th
-                                class="p-4 border-r-2 border-black font-black uppercase tracking-wide w-24 text-center"
+                                class="p-4 border-r-2 border-black font-black uppercase w-24 text-center"
                             >
-                                Bản sao
+                                Kho
                             </th>
-                            <th class="p-4 font-black uppercase tracking-wide w-40 text-center">
-                                Thao tác
-                            </th>
+                            <th class="p-4 font-black uppercase w-40 text-center">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y-2 divide-black">
@@ -175,7 +171,20 @@ const getCategoryColor = (index: number): string => {
                             :key="book._id"
                             class="hover:bg-purple-50 transition-colors group"
                         >
-                            <td class="p-4 border-r-2 border-black align-top">
+                            <td class="p-2 border-r-2 border-black align-middle text-center">
+                                <div
+                                    class="w-12 h-16 bg-gray-200 border-2 border-black mx-auto overflow-hidden flex items-center justify-center"
+                                >
+                                    <img
+                                        v-if="book.hinhAnh"
+                                        :src="book.hinhAnh"
+                                        class="w-full h-full object-cover"
+                                    />
+                                    <ImageIcon v-else :size="20" class="text-gray-400" />
+                                </div>
+                            </td>
+
+                            <td class="p-4 border-r-2 border-black align-middle">
                                 <span
                                     class="font-mono font-bold bg-black text-white px-2 py-1 text-sm block text-center"
                                 >
@@ -183,7 +192,7 @@ const getCategoryColor = (index: number): string => {
                                 </span>
                             </td>
 
-                            <td class="p-4 border-r-2 border-black align-top">
+                            <td class="p-4 border-r-2 border-black align-middle">
                                 <h4 class="font-black text-lg leading-tight mb-1">
                                     {{ book.tenSach }}
                                 </h4>
@@ -192,7 +201,7 @@ const getCategoryColor = (index: number): string => {
                                 </p>
                             </td>
 
-                            <td class="p-4 border-r-2 border-black align-top text-sm">
+                            <td class="p-4 border-r-2 border-black align-middle text-sm">
                                 <div class="mb-2">
                                     <p class="text-[10px] uppercase font-bold text-gray-500">
                                         Tác giả
@@ -209,17 +218,17 @@ const getCategoryColor = (index: number): string => {
                                         Nhà Xuất Bản
                                     </p>
                                     <p class="font-medium truncate">
-                                        {{ book.nhaXuatBan?.tenNhaXuatBan || "N/A" }}
+                                        {{ (book.nhaXuatBan as any)?.tenNhaXuatBan || "N/A" }}
                                     </p>
                                 </div>
                             </td>
 
-                            <td class="p-4 border-r-2 border-black align-top">
-                                <div class="flex flex-wrap gap-2">
+                            <td class="p-4 border-r-2 border-black align-middle">
+                                <div class="flex flex-wrap gap-1">
                                     <span
                                         v-for="(dm, idx) in book.danhMuc"
                                         :key="dm._id"
-                                        class="px-2 py-1 text-xs font-bold border border-black shadow-neo-sm"
+                                        class="px-2 py-0.5 text-[10px] font-bold border border-black shadow-neo-sm"
                                         :class="getCategoryColor(idx)"
                                     >
                                         {{ dm.tenDanhMuc }}
@@ -264,7 +273,7 @@ const getCategoryColor = (index: number): string => {
                         </tr>
 
                         <tr v-if="filteredBooks.length === 0">
-                            <td colspan="6" class="p-12 text-center bg-gray-50">
+                            <td colspan="7" class="p-12 text-center bg-gray-50">
                                 <div class="flex flex-col items-center gap-3">
                                     <AlertCircle :size="40" class="text-gray-400" />
                                     <p class="font-bold text-gray-500 text-lg">

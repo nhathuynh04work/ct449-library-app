@@ -12,7 +12,7 @@ import {
 } from "lucide-vue-next";
 import NeoButton from "@/components/ui/NeoButton.vue";
 import NeoInput from "@/components/ui/NeoInput.vue";
-import NeoSelect from "@/components/ui/NeoSelect.vue";
+import NeoMultiSelect from "@/components/ui/NeoMultiSelect.vue"; // Changed from NeoSelect
 import NeoConfirmModal from "@/components/ui/NeoConfirmModal.vue";
 import { useBooks } from "@/features/books/queries";
 import { useAuthors, useCategories } from "@/features/resources/queries";
@@ -29,8 +29,10 @@ const { data: categories } = useCategories();
 const { mutate: borrowBook, isPending: isBorrowing } = useBorrowBook();
 
 const searchQuery = ref("");
-const selectedAuthor = ref("");
-const selectedCategory = ref("");
+// Changed to arrays for multi-select
+const selectedAuthors = ref<string[]>([]);
+const selectedCategories = ref<string[]>([]);
+
 const showConfirm = ref(false);
 const selectedBook = ref<Sach | null>(null);
 const isLoggedIn = ref(false);
@@ -39,15 +41,14 @@ onMounted(() => {
     isLoggedIn.value = !!localStorage.getItem("token");
 });
 
-const authorOptions = computed(() => [
-    { value: "", label: "Tất cả tác giả" },
-    ...(authors.value?.map((a) => ({ value: a._id, label: a.tenTacGia })) || []),
-]);
+// Options without "All" because MultiSelect handles empty state as "All"
+const authorOptions = computed(
+    () => authors.value?.map((a) => ({ value: a._id, label: a.tenTacGia })) || [],
+);
 
-const categoryOptions = computed(() => [
-    { value: "", label: "Tất cả danh mục" },
-    ...(categories.value?.map((c) => ({ value: c._id, label: c.tenDanhMuc })) || []),
-]);
+const categoryOptions = computed(
+    () => categories.value?.map((c) => ({ value: c._id, label: c.tenDanhMuc })) || [],
+);
 
 const filteredBooks = computed(() => {
     if (!books.value) return [];
@@ -58,10 +59,18 @@ const filteredBooks = computed(() => {
             book.tenSach.toLowerCase().includes(query) || book.maSach.toLowerCase().includes(query);
 
         if (!matchesSearch) return false;
-        if (selectedAuthor.value && !book.tacGia.some((t) => t._id === selectedAuthor.value))
-            return false;
-        if (selectedCategory.value && !book.danhMuc.some((d) => d._id === selectedCategory.value))
-            return false;
+
+        // Filter by Authors (Match ANY selected author)
+        if (selectedAuthors.value.length > 0) {
+            const hasAuthor = book.tacGia.some((t) => selectedAuthors.value.includes(t._id));
+            if (!hasAuthor) return false;
+        }
+
+        // Filter by Categories (Match ANY selected category)
+        if (selectedCategories.value.length > 0) {
+            const hasCategory = book.danhMuc.some((d) => selectedCategories.value.includes(d._id));
+            if (!hasCategory) return false;
+        }
 
         return true;
     });
@@ -117,40 +126,43 @@ const getRandomColor = (id: string) => {
 </script>
 
 <template>
-    <div>
+    <div class="relative">
         <div
-            class="bg-white border-4 border-black p-4 mb-8 shadow-neo flex flex-col md:flex-row gap-4 items-end md:items-center"
+            class="sticky top-20 z-30 bg-yellow-300 border-4 border-black p-4 mb-8 shadow-neo flex flex-col md:flex-row gap-4 items-start -mx-2 md:mx-0"
         >
-            <div class="flex items-center gap-2 text-xl font-black uppercase font-display mr-4">
+            <div
+                class="flex items-center gap-2 text-xl font-black uppercase font-display mr-4 min-w-fit md:h-[52px]"
+            >
                 <Filter :size="24" />
                 <span class="hidden md:inline">Bộ lọc</span>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-                <div class="relative">
+                <div class="relative h-full">
                     <NeoInput
                         id="search"
-                        label=""
                         placeholder="Tìm tên sách, mã sách..."
                         v-model="searchQuery"
                         class="w-full"
                     />
                     <Search
-                        class="absolute right-3 top-3 text-gray-400 pointer-events-none"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
                         :size="20"
                     />
                 </div>
-                <NeoSelect
+
+                <NeoMultiSelect
                     id="author-filter"
                     :options="authorOptions"
-                    v-model="selectedAuthor"
-                    placeholder="Tất cả tác giả"
+                    v-model="selectedAuthors"
+                    placeholder="Chọn tác giả..."
                 />
-                <NeoSelect
+
+                <NeoMultiSelect
                     id="category-filter"
                     :options="categoryOptions"
-                    v-model="selectedCategory"
-                    placeholder="Tất cả danh mục"
+                    v-model="selectedCategories"
+                    placeholder="Chọn danh mục..."
                 />
             </div>
         </div>
@@ -177,8 +189,8 @@ const getRandomColor = (id: string) => {
                 <NeoButton
                     @click="
                         searchQuery = '';
-                        selectedAuthor = '';
-                        selectedCategory = '';
+                        selectedAuthors = [];
+                        selectedCategories = [];
                     "
                     variant="secondary"
                 >
@@ -201,7 +213,7 @@ const getRandomColor = (id: string) => {
                             v-if="book.hinhAnh"
                             :src="book.hinhAnh"
                             :alt="book.tenSach"
-                            class="w-full h-full object-cover"
+                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                             @error="book.hinhAnh = ''"
                         />
                         <ImageIcon v-else :size="48" class="text-black/20" />
@@ -246,7 +258,7 @@ const getRandomColor = (id: string) => {
                                 class="flex items-center gap-2 mt-2 pt-2 border-t border-dashed border-gray-300"
                             >
                                 <div
-                                    class="w-2 h-2 rounded-full"
+                                    class="w-2 h-2 rounded-full border border-black"
                                     :class="
                                         (book.soLuongKhaDung || 0) > 0
                                             ? 'bg-green-500'
