@@ -1,4 +1,5 @@
 import { TrangThaiBanSao } from "@/constants/trangThaiBanSao.js";
+import { BadRequestException } from "@/errors/bad-request.js";
 import { ConflictException } from "@/errors/conflict.js";
 import { NotFoundException } from "@/errors/not-found.js";
 import { BanSao } from "@/models/BanSao.js";
@@ -141,14 +142,40 @@ export async function muonSach(params: { docGiaId: string; sachId: string }) {
 	session.startTransaction();
 
 	try {
-		// [LOGIC ADDED]: Check if user is already borrowing this book (any copy)
-		// 1. Find all copies of this book
+		// [LOGIC 1A]: Check Borrow Limit (Max 5 books)
+		const MAX_BORROW_LIMIT = 5;
+		const currentLoansCount = await TheoDoiMuonSach.countDocuments({
+			docGia: docGiaId,
+			trangThai: {
+				$in: [TrangThaiMuon.DANG_CHO, TrangThaiMuon.DANG_MUON],
+			},
+		}).session(session);
+
+		if (currentLoansCount >= MAX_BORROW_LIMIT) {
+			throw new BadRequestException(
+				`Bạn chỉ được phép mượn tối đa ${MAX_BORROW_LIMIT} cuốn sách cùng lúc.`
+			);
+		}
+
+		// [LOGIC 1B]: Check for Overdue Books
+		const overdueLoans = await TheoDoiMuonSach.findOne({
+			docGia: docGiaId,
+			trangThai: TrangThaiMuon.DANG_MUON,
+			hanTra: { $lt: new Date() }, // Due date is in the past
+		}).session(session);
+
+		if (overdueLoans) {
+			throw new BadRequestException(
+				"Bạn đang có sách quá hạn chưa trả. Vui lòng trả sách trước khi mượn mới."
+			);
+		}
+
+		// [LOGIC EXISTING]: Check if user is already borrowing THIS book (any copy)
 		const bookCopies = await BanSao.find({ sach: sachId })
 			.select("_id")
 			.session(session);
 		const copyIds = bookCopies.map((c) => c._id);
 
-		// 2. Check for active loans (Pending or Borrowing) for these copies
 		const existingLoan = await TheoDoiMuonSach.findOne({
 			docGia: docGiaId,
 			banSao: { $in: copyIds },
@@ -159,11 +186,11 @@ export async function muonSach(params: { docGiaId: string; sachId: string }) {
 
 		if (existingLoan) {
 			throw new ConflictException(
-				"Bạn đang mượn hoặc đã yêu cầu sách này rồi. Vui lòng trả sách trước khi mượn lại."
+				"Bạn đang mượn hoặc đã yêu cầu sách này rồi."
 			);
 		}
 
-		// [LOGIC EXISTING]: Check availability
+		// [LOGIC EXISTING]: Find ONE available copy
 		const banSao = await BanSao.findOne({
 			sach: sachId,
 			trangThai: TrangThaiBanSao.AVAILABLE,
@@ -180,13 +207,10 @@ export async function muonSach(params: { docGiaId: string; sachId: string }) {
 			docGia: docGiaId,
 			banSao: banSao._id,
 			ngayMuon: new Date(),
-			// hanTra will be set by default in schema (now + 14 days),
-			// but effectively reset upon approval.
 			trangThai: TrangThaiMuon.DANG_CHO,
 		});
 
 		await phieuMuon.save({ session });
-
 		await session.commitTransaction();
 
 		return {

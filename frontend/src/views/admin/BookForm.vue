@@ -1,169 +1,183 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import { X, Save, Loader2 } from "lucide-vue-next";
-import NeoInput from "@/components/ui/NeoInput.vue";
-import NeoSelect from "@/components/ui/NeoSelect.vue";
-import NeoMultiSelect from "@/components/ui/NeoMultiSelect.vue";
+import { ref, computed, watch } from "vue";
+import { Loader2 } from "lucide-vue-next";
+import BaseModal from "@/components/common/BaseModal.vue";
 import NeoButton from "@/components/ui/NeoButton.vue";
-import { useAuthors, useCategories, usePublishers } from "@/features/resources/queries";
-import { useCreateBook } from "@/features/books/mutations";
+import { useCreateBook, useUpdateBook } from "@/features/books/mutations";
 import { useToast } from "@/composables/useToast";
+import type { Sach } from "@/types/models/Sach";
 
-const emit = defineEmits(["close", "success"]);
+const props = defineProps<{
+    book?: Sach;
+}>();
+
+const emit = defineEmits<{
+    (e: "close"): void;
+    (e: "success"): void;
+}>();
+
+const { mutate: createBook, isPending: isCreating } = useCreateBook();
+const { mutate: updateBook, isPending: isUpdating } = useUpdateBook();
 const { addToast } = useToast();
 
-const { data: authors } = useAuthors();
-const { data: publishers } = usePublishers();
-const { data: categories } = useCategories();
-const { mutate: createBook, isPending } = useCreateBook();
+const isEditMode = computed<boolean>(() => !!props.book);
+const isPending = computed<boolean>(() => isCreating.value || isUpdating.value);
 
-const authorOptions = computed(
-    () => authors.value?.map((a) => ({ value: a._id, label: a.tenTacGia })) || [],
-);
-const publisherOptions = computed(
-    () => publishers.value?.map((p) => ({ value: p._id, label: p.tenNhaXuatBan })) || [],
-);
-const categoryOptions = computed(
-    () => categories.value?.map((c) => ({ value: c._id, label: c.tenDanhMuc })) || [],
-);
-
-const form = ref({
+const formData = ref({
+    maSach: "",
     tenSach: "",
     namXuatBan: new Date().getFullYear(),
-    nhaXuatBan: "",
-    tacGia: [] as string[],
-    danhMuc: [] as string[],
+    soLuongBanSao: 0,
+    tacGiaIds: [],
+    nhaXuatBanId: "",
+    danhMucIds: [],
 });
 
-const handleSubmit = () => {
-    if (!form.value.tenSach || !form.value.nhaXuatBan || form.value.tacGia.length === 0) {
-        addToast({
-            title: "Thiếu thông tin",
-            description: "Vui lòng điền đầy đủ các trường bắt buộc.",
-            variant: "warning",
-        });
-        return;
-    }
+const initForm = () => {
+    if (props.book) {
+        formData.value = {
+            maSach: props.book.maSach,
+            tenSach: props.book.tenSach,
+            namXuatBan: props.book.namXuatBan,
+            soLuongBanSao: props.book.soLuongBanSao || 0,
 
-    createBook(
-        {
-            ...form.value,
-            namXuatBan: Number(form.value.namXuatBan),
-        },
-        {
+            tacGiaIds: props.book.tacGia.map((t) => t._id),
+            nhaXuatBanId: props.book.nhaXuatBan?._id || "",
+            danhMucIds: props.book.danhMuc.map((d) => d._id),
+        };
+    } else {
+        formData.value = {
+            maSach: "",
+            tenSach: "",
+            namXuatBan: new Date().getFullYear(),
+            soLuongBanSao: 0,
+            tacGiaIds: [],
+            nhaXuatBanId: "",
+            danhMucIds: [],
+        };
+    }
+};
+
+watch(() => props.book, initForm, { immediate: true });
+
+const handleSubmit = () => {
+    if (isEditMode.value && props.book) {
+        updateBook(
+            { id: props.book._id, data: formData.value },
+            {
+                onSuccess: () => {
+                    addToast({
+                        title: "Cập nhật thành công",
+                        description: `Đã cập nhật thông tin sách "${formData.value.tenSach}"`,
+                        variant: "success",
+                    });
+                    emit("success");
+                },
+                onError: (err: Error) => {
+                    addToast({
+                        title: "Lỗi cập nhật",
+                        description: err.message || "Có lỗi xảy ra.",
+                        variant: "error",
+                    });
+                },
+            },
+        );
+    } else {
+        createBook(formData.value, {
             onSuccess: () => {
                 addToast({
-                    title: "Thành công",
-                    description: "Đã thêm sách mới.",
+                    title: "Thêm mới thành công",
+                    description: `Đã thêm sách "${formData.value.tenSach}" vào hệ thống.`,
                     variant: "success",
                 });
                 emit("success");
-                emit("close");
             },
             onError: (err: Error) => {
                 addToast({
-                    title: "Lỗi",
-                    description: err.message || "Không thể thêm sách.",
+                    title: "Lỗi thêm mới",
+                    description: err.message || "Có lỗi xảy ra.",
                     variant: "error",
                 });
             },
-        },
-    );
+        });
+    }
 };
 </script>
 
 <template>
-    <div
-        class="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-        @click.self="$emit('close')"
+    <BaseModal
+        :isOpen="true"
+        :title="isEditMode ? 'Chỉnh Sửa Thông Tin Sách' : 'Thêm Sách Mới'"
+        @close="$emit('close')"
     >
-        <div class="bg-white border-4 border-black shadow-neo w-full max-w-2xl relative animate-in">
-            <div
-                class="bg-yellow-300 p-4 border-b-4 border-black flex justify-between items-center"
-            >
-                <h2 class="text-xl font-black uppercase font-display">Thêm Sách Mới</h2>
-                <button
-                    @click="$emit('close')"
-                    class="hover:bg-white/50 p-1 border-2 border-transparent hover:border-black transition-all"
-                >
-                    <X :size="24" />
-                </button>
-            </div>
+        <form @submit.prevent="handleSubmit" class="space-y-5">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="block text-sm font-black uppercase">Mã Sách</label>
+                    <input
+                        v-model="formData.maSach"
+                        type="text"
+                        :disabled="isEditMode"
+                        class="w-full p-2.5 bg-gray-50 border-2 border-black focus:shadow-neo-sm outline-none transition-all disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
+                        placeholder="VD: S001"
+                        required
+                    />
+                    <p v-if="isEditMode" class="text-xs text-gray-500 font-bold">
+                        * Mã sách không thể thay đổi
+                    </p>
+                </div>
 
-            <form @submit.prevent="handleSubmit" class="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
-                <div class="space-y-4">
-                    <NeoInput
-                        id="tenSach"
-                        label="Tên Sách"
-                        v-model="form.tenSach"
-                        placeholder="Nhập tên sách..."
-                    />
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <NeoInput
-                            id="namXuatBan"
-                            label="Năm Xuất Bản"
-                            type="number"
-                            v-model="form.namXuatBan"
-                        />
-                        <NeoSelect
-                            id="nhaXuatBan"
-                            label="Nhà Xuất Bản"
-                            v-model="form.nhaXuatBan"
-                            :options="publisherOptions"
-                            placeholder="Chọn NXB..."
-                        />
-                    </div>
-                    <NeoMultiSelect
-                        id="tacGia"
-                        label="Tác Giả"
-                        v-model="form.tacGia"
-                        :options="authorOptions"
-                        placeholder="Chọn tác giả..."
-                    />
-                    <NeoMultiSelect
-                        id="danhMuc"
-                        label="Danh Mục"
-                        v-model="form.danhMuc"
-                        :options="categoryOptions"
-                        placeholder="Chọn thể loại..."
+                <div class="space-y-1">
+                    <label class="block text-sm font-black uppercase">Năm Xuất Bản</label>
+                    <input
+                        v-model="formData.namXuatBan"
+                        type="number"
+                        class="w-full p-2.5 bg-white border-2 border-black focus:shadow-neo-sm outline-none transition-all"
+                        required
                     />
                 </div>
-            </form>
+            </div>
 
-            <div class="p-4 border-t-4 border-black bg-gray-50 flex justify-end gap-3">
-                <button
+            <div class="space-y-1">
+                <label class="block text-sm font-black uppercase">Tên Sách</label>
+                <input
+                    v-model="formData.tenSach"
+                    type="text"
+                    class="w-full p-2.5 bg-white border-2 border-black focus:shadow-neo-sm outline-none transition-all"
+                    placeholder="Nhập tên sách đầy đủ..."
+                    required
+                />
+            </div>
+
+            <div
+                class="p-4 bg-yellow-50 border-2 border-dashed border-black text-sm font-bold text-gray-600"
+            >
+                <p>⚠️ Chức năng chọn Tác Giả & NXB đang phát triển</p>
+                <p class="text-xs font-normal mt-1 text-gray-500">
+                    Dữ liệu hiện tại: {{ formData.tacGiaIds.length }} tác giả,
+                    {{ formData.danhMucIds.length }} danh mục.
+                </p>
+            </div>
+
+            <div class="pt-6 flex justify-end gap-3 border-t-2 border-black mt-4">
+                <NeoButton
+                    type="button"
+                    variant="secondary"
                     @click="$emit('close')"
-                    class="px-4 py-2 font-bold border-2 border-transparent hover:underline"
+                    :disabled="isPending"
                 >
                     Hủy bỏ
-                </button>
-                <NeoButton
-                    @click="handleSubmit"
-                    variant="primary"
-                    :disabled="isPending"
-                    class="flex items-center gap-2"
-                >
-                    <Loader2 v-if="isPending" :size="20" class="animate-spin" />
-                    <Save v-else :size="20" />
-                    Lưu Sách
+                </NeoButton>
+
+                <NeoButton type="submit" class="min-w-[120px]" :disabled="isPending">
+                    <span v-if="isPending" class="flex items-center gap-2">
+                        <Loader2 class="animate-spin" :size="16" /> Đang lưu...
+                    </span>
+                    <span v-else>
+                        {{ isEditMode ? "Cập Nhật" : "Lưu Sách Mới" }}
+                    </span>
                 </NeoButton>
             </div>
-        </div>
-    </div>
+        </form>
+    </BaseModal>
 </template>
-
-<style scoped>
-.animate-in {
-    animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-@keyframes popIn {
-    from {
-        opacity: 0;
-        transform: scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-</style>

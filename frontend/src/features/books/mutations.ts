@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
-import { booksApi, type CreateBookPayload } from "./api";
+import { booksApi, type CreateBookPayload, type UpdateBookPayload } from "./api";
 
 export function useDeleteBook() {
     const queryClient = useQueryClient();
@@ -22,6 +22,19 @@ export function useCreateBook() {
         },
     });
 }
+
+export const useUpdateBook = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ id, payload }: { id: string; payload: UpdateBookPayload }) =>
+            booksApi.update(id, payload),
+
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["books"] });
+        },
+    });
+};
 
 export function useBorrowBook() {
     const queryClient = useQueryClient();

@@ -6,17 +6,18 @@ export interface Sach {
     _id: string;
     maSach: string;
     tenSach: string;
-    donGia: number;
-    soQuyen: number;
     namXuatBan: number;
-    trangThai: string;
+
+    // [NEW FIELDS]
+    hinhAnh?: string;
+    moTa?: string;
 
     // Relations
     tacGia: TacGia[];
     danhMuc: DanhMuc[];
-    nhaXuatBan: NhaXuatBan | string; // Can be populated or ID
+    nhaXuatBan: NhaXuatBan | string;
 
-    // Augmented fields from aggregations
+    // Augmented fields
     soLuongBanSao?: number;
     soLuongKhaDung?: number;
 

@@ -8,6 +8,8 @@ import sachRoutes from "./sach.routes.js";
 import banSaoRoutes from "./banSao.routes.js";
 import authRoutes from "./auth.routes.js";
 import theoDoiMuonSachRoutes from "./theoDoiMuonSach.routes.js";
+import * as dashboardController from "@/controllers/dashboard.controller.js";
+import { authenticate } from "@/middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -19,6 +21,7 @@ router.use("/nhaxuatban", nhaXuatBanRoutes);
 router.use("/sach", sachRoutes);
 router.use("/bansao", banSaoRoutes);
 router.use("/tracking", theoDoiMuonSachRoutes);
+router.get("/dashboard/stats", authenticate, dashboardController.getStats);
 router.use("/auth", authRoutes);
 
 export default router;

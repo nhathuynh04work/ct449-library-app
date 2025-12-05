@@ -6,9 +6,13 @@ export interface CreateBookPayload {
     tenSach: string;
     namXuatBan: number;
     tacGia: string[];
+    hinhAnh?: string;
+    moTa?: string;
     danhMuc: string[];
     nhaXuatBan: string;
 }
+
+export type UpdateBookPayload = CreateBookPayload;
 
 export const booksApi = {
     getAll: async (): Promise<Sach[]> => {
@@ -23,6 +27,11 @@ export const booksApi = {
 
     create: async (payload: CreateBookPayload): Promise<Sach> => {
         const { data } = await api.post("/sach", payload);
+        return data;
+    },
+
+    update: async (id: string, payload: UpdateBookPayload): Promise<Sach> => {
+        const { data } = await api.put(`/sach/${id}`, payload);
         return data;
     },
 

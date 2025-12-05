@@ -14,3 +14,10 @@ export function useReaders() {
         queryFn: managementApi.getAllReaders,
     });
 }
+
+export function useDashboardStats() {
+    return useQuery({
+        queryKey: ["dashboard-stats"],
+        queryFn: managementApi.getDashboardStats,
+    });
+}

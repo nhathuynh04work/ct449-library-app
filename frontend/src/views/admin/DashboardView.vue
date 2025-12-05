@@ -1,18 +1,50 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { Book, Users, Library, Bell, Plus, ArrowUpRight } from "lucide-vue-next";
-import NeoButton from "@/components/ui/NeoButton.vue";
+import { ref, onMounted, computed } from "vue";
+import { Book, Users, Library, Bell, TrendingUp, Loader2 } from "lucide-vue-next";
 import { getUserFromLocalStorage } from "@/lib/utils/getUserFromLocalStorage";
 import type { NhanVien } from "@/types/models/NhanVien";
+import { useDashboardStats } from "@/features/management/queries";
 
 const currentUser = ref<NhanVien | null>(null);
 
-const stats = [
-    { label: "Tổng số Sách", value: "1,240", change: "+12%", color: "bg-blue-300", icon: Book },
-    { label: "Độc giả", value: "850", change: "+5%", color: "bg-green-300", icon: Users },
-    { label: "Lượt mượn", value: "124", change: "+18%", color: "bg-pink-300", icon: Library },
-    { label: "Yêu cầu mới", value: "12", change: "Mới", color: "bg-yellow-300", icon: Bell },
-];
+// Fetch real stats from the backend
+const { data: apiStats, isLoading } = useDashboardStats();
+
+const stats = computed(() => [
+    {
+        label: "Tổng số Sách",
+        value: apiStats.value?.totalBooks || 0,
+        change: "Cuốn",
+        color: "bg-blue-300",
+        icon: Book,
+    },
+    {
+        label: "Độc giả",
+        value: apiStats.value?.totalReaders || 0,
+        change: "Người",
+        color: "bg-green-300",
+        icon: Users,
+    },
+    {
+        label: "Đang mượn",
+        value: apiStats.value?.activeLoans || 0,
+        change: "Phiếu",
+        color: "bg-pink-300",
+        icon: Library,
+    },
+    {
+        label: "Yêu cầu mới",
+        value: apiStats.value?.newRequests || 0,
+        change: "Chờ duyệt",
+        color: "bg-yellow-300",
+        icon: Bell,
+    },
+]);
+
+// Chart Data
+const labels = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+const chartValues = ref([40, 30, 55, 45, 70, 65, 85]);
+const maxChartValue = computed(() => Math.max(...chartValues.value, 100)); // Ensure at least 100 for scale
 
 onMounted(() => {
     currentUser.value = getUserFromLocalStorage() as NhanVien;
@@ -20,29 +52,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="space-y-10 animate-in">
-        <div
-            class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b-4 border-black pb-6 bg-white p-6 shadow-neo"
-        >
-            <div>
-                <h1
-                    class="text-4xl md:text-5xl font-black font-display uppercase italic transform -skew-x-6"
-                >
-                    Dashboard
-                </h1>
-                <p class="font-bold text-gray-500 mt-2 text-lg">
-                    Chào mừng trở lại,
-                    <span class="bg-black text-white px-2">{{ currentUser?.ten }}</span>
-                </p>
-            </div>
-            <div class="flex gap-3">
-                <NeoButton variant="secondary" class="text-sm">Báo cáo tuần</NeoButton>
-                <NeoButton class="text-sm flex items-center gap-2">
-                    <Plus :size="18" /> Thêm mới
-                </NeoButton>
-            </div>
-        </div>
-
+    <div class="space-y-8 animate-in pt-6">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div
                 v-for="(stat, index) in stats"
@@ -62,51 +72,42 @@ onMounted(() => {
                 <h3 class="text-gray-600 font-bold text-sm uppercase tracking-wide">
                     {{ stat.label }}
                 </h3>
-                <p class="text-4xl font-black font-display mt-1">{{ stat.value }}</p>
+                <div class="flex items-center gap-2 mt-1">
+                    <Loader2 v-if="isLoading" class="animate-spin text-black" :size="24" />
+                    <p v-else class="text-4xl font-black font-display">{{ stat.value }}</p>
+                </div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2 space-y-8">
-                <div class="bg-purple-100 border-4 border-black p-6 shadow-neo">
-                    <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-2xl font-black uppercase flex items-center gap-2">
-                            <ArrowUpRight class="bg-white border-2 border-black p-0.5" :size="28" />
-                            Truy cập nhanh
-                        </h2>
-                    </div>
+            <div class="lg:col-span-2 bg-white border-4 border-black p-6 shadow-neo flex flex-col">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-2xl font-black uppercase flex items-center gap-2">
+                        <TrendingUp class="bg-yellow-300 border-2 border-black p-0.5" :size="28" />
+                        Hoạt động tuần qua
+                    </h2>
+                </div>
 
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <button
-                            class="bg-white p-4 border-2 border-black shadow-neo-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all text-left group"
+                <div
+                    class="flex-1 flex items-end justify-between gap-4 h-64 px-2 pb-2 border-b-2 border-gray-100"
+                >
+                    <div
+                        v-for="(value, index) in chartValues"
+                        :key="index"
+                        class="w-full h-full flex flex-col justify-end items-center gap-2 group relative"
+                    >
+                        <div
+                            class="opacity-0 group-hover:opacity-100 absolute -top-8 transition-opacity bg-black text-white text-xs font-bold px-2 py-1 pointer-events-none whitespace-nowrap z-10"
                         >
-                            <div
-                                class="mb-3 bg-blue-200 w-10 h-10 flex items-center justify-center border-2 border-black group-hover:scale-110 transition-transform"
-                            >
-                                <Book :size="20" />
-                            </div>
-                            <span class="font-bold block">Thêm sách mới</span>
-                        </button>
-                        <button
-                            class="bg-white p-4 border-2 border-black shadow-neo-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all text-left group"
-                        >
-                            <div
-                                class="mb-3 bg-green-200 w-10 h-10 flex items-center justify-center border-2 border-black group-hover:scale-110 transition-transform"
-                            >
-                                <Users :size="20" />
-                            </div>
-                            <span class="font-bold block">Đăng ký độc giả</span>
-                        </button>
-                        <button
-                            class="bg-white p-4 border-2 border-black shadow-neo-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all text-left group"
-                        >
-                            <div
-                                class="mb-3 bg-yellow-200 w-10 h-10 flex items-center justify-center border-2 border-black group-hover:scale-110 transition-transform"
-                            >
-                                <Library :size="20" />
-                            </div>
-                            <span class="font-bold block">Tạo phiếu mượn</span>
-                        </button>
+                            {{ value }} lượt
+                        </div>
+
+                        <div
+                            class="w-full bg-blue-400 border-2 border-black relative transition-all duration-500 ease-out hover:bg-blue-300 shadow-neo-sm origin-bottom"
+                            :style="{ height: `${(value / maxChartValue) * 100}%` }"
+                        ></div>
+
+                        <span class="font-bold text-sm text-gray-500">{{ labels[index] }}</span>
                     </div>
                 </div>
             </div>
@@ -115,7 +116,7 @@ onMounted(() => {
                 <div
                     class="bg-red-400 p-4 border-b-4 border-black flex justify-between items-center"
                 >
-                    <h2 class="font-black text-white text-xl uppercase">Hoạt động</h2>
+                    <h2 class="font-black text-white text-xl uppercase">Thông báo</h2>
                     <Bell :size="20" class="text-white" />
                 </div>
                 <div class="divide-y-4 divide-black">
@@ -123,22 +124,19 @@ onMounted(() => {
                         <div class="w-2 h-2 bg-red-500 rounded-full mt-2 shrink-0"></div>
                         <div>
                             <p class="font-bold text-sm">
-                                Nguyễn Văn A <span class="font-normal">vừa trả sách</span> "Clean
-                                Code"
+                                Hệ thống <span class="font-normal">đã cập nhật số liệu</span>
                             </p>
-                            <p class="text-xs font-bold text-gray-400 mt-1 uppercase">
-                                2 phút trước
-                            </p>
+                            <p class="text-xs font-bold text-gray-400 mt-1 uppercase">Vừa xong</p>
                         </div>
                     </div>
                     <div class="p-4 bg-white flex gap-3 items-start">
                         <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 shrink-0"></div>
                         <div>
                             <p class="font-bold text-sm">
-                                Trần Thị B <span class="font-normal">đăng ký thành viên mới</span>
+                                <span class="font-normal">Có 5 sách</span> sắp quá hạn trả
                             </p>
                             <p class="text-xs font-bold text-gray-400 mt-1 uppercase">
-                                15 phút trước
+                                1 giờ trước
                             </p>
                         </div>
                     </div>

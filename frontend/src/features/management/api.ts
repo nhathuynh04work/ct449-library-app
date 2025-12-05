@@ -22,4 +22,9 @@ export const managementApi = {
         const { data } = await api.post("/docgia", payload);
         return data;
     },
+
+    getDashboardStats: async () => {
+        const { data } = await api.get("/dashboard/stats");
+        return data;
+    },
 };

@@ -8,6 +8,8 @@ export interface ISach {
 	maSach: string;
 	tenSach: string;
 	namXuatBan: number;
+	hinhAnh?: string;
+	moTa?: string;
 
 	tacGia: (Schema.Types.ObjectId | ITacGia)[];
 	danhMuc: (Schema.Types.ObjectId | IDanhMuc)[];
@@ -32,13 +34,20 @@ const sachSchema = new Schema<ISach>(
 			type: Number,
 			required: true,
 		},
-
+		// [NEW FIELDS ADDED]
+		hinhAnh: {
+			type: String,
+			required: false,
+		},
+		moTa: {
+			type: String,
+			required: false,
+		},
 		tacGia: {
 			type: [Schema.Types.ObjectId],
 			ref: "TacGia",
 			required: true,
 		},
-
 		danhMuc: {
 			type: [Schema.Types.ObjectId],
 			ref: "DanhMuc",

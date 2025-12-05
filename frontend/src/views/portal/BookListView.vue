@@ -193,11 +193,19 @@ const getRandomColor = (id: string) => {
                     class="h-full bg-white border-4 border-black shadow-neo flex flex-col transition-all duration-200 group-hover:-translate-y-2 group-hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
                 >
                     <div
-                        class="h-48 border-b-4 border-black relative overflow-hidden flex items-center justify-center cursor-pointer"
-                        :class="getRandomColor(book.maSach)"
+                        class="h-48 border-b-4 border-black relative overflow-hidden flex items-center justify-center cursor-pointer bg-gray-100"
+                        :class="!book.hinhAnh ? getRandomColor(book.maSach) : ''"
                         @click="goToDetail(book._id)"
                     >
-                        <ImageIcon :size="48" class="text-black/20" />
+                        <img
+                            v-if="book.hinhAnh"
+                            :src="book.hinhAnh"
+                            :alt="book.tenSach"
+                            class="w-full h-full object-cover"
+                            @error="book.hinhAnh = ''"
+                        />
+                        <ImageIcon v-else :size="48" class="text-black/20" />
+
                         <div
                             class="absolute top-2 left-2 bg-black text-white text-xs font-mono font-bold px-2 py-1"
                         >
@@ -289,9 +297,14 @@ const getRandomColor = (id: string) => {
                 <p>Bạn đang đăng ký mượn cuốn sách sau:</p>
                 <div class="bg-yellow-50 border-2 border-black p-3 flex gap-4">
                     <div
-                        class="w-16 h-20 bg-gray-200 border-2 border-black flex items-center justify-center shrink-0"
+                        class="w-16 h-20 bg-gray-200 border-2 border-black flex items-center justify-center shrink-0 overflow-hidden"
                     >
-                        <BookOpen :size="24" class="text-gray-400" />
+                        <img
+                            v-if="selectedBook?.hinhAnh"
+                            :src="selectedBook?.hinhAnh"
+                            class="w-full h-full object-cover"
+                        />
+                        <BookOpen v-else :size="24" class="text-gray-400" />
                     </div>
                     <div>
                         <p class="font-black text-lg uppercase leading-tight line-clamp-2">

@@ -19,9 +19,10 @@ export interface ITheoDoiMuonSach {
 	docGia: Schema.Types.ObjectId | IDocGia;
 	banSao: Schema.Types.ObjectId | IBanSao;
 	ngayMuon: Date;
-	hanTra: Date; // Added Due Date
+	hanTra: Date;
 	ngayTra?: Date | null;
 	trangThai: TrangThaiMuonType;
+	tienPhat?: number; // [NEW FIELD]: Penalty Amount
 
 	createdAt?: Date;
 	updatedAt?: Date;
@@ -54,7 +55,6 @@ const theoDoiMuonSachSchema = new Schema<ITheoDoiMuonSach>(
 		hanTra: {
 			type: Date,
 			required: true,
-			// Default 14 days from creation (can be updated on approval)
 			default: () => new Date(+new Date() + 14 * 24 * 60 * 60 * 1000),
 		},
 		ngayTra: {
@@ -66,6 +66,11 @@ const theoDoiMuonSachSchema = new Schema<ITheoDoiMuonSach>(
 			enum: Object.values(TrangThaiMuon),
 			default: TrangThaiMuon.DANG_CHO,
 			required: true,
+		},
+		// [NEW FIELD]
+		tienPhat: {
+			type: Number,
+			default: 0,
 		},
 	},
 	{ timestamps: true }

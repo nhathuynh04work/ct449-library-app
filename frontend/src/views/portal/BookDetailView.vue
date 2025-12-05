@@ -72,10 +72,17 @@ const getRandomColor = (id: string) => {
             class="bg-white border-4 border-black shadow-neo grid grid-cols-1 md:grid-cols-3"
         >
             <div
-                class="md:col-span-1 border-b-4 md:border-b-0 md:border-r-4 border-black min-h-[300px] flex items-center justify-center relative overflow-hidden"
-                :class="getRandomColor(book._id)"
+                class="md:col-span-1 border-b-4 md:border-b-0 md:border-r-4 border-black min-h-[300px] flex items-center justify-center relative overflow-hidden bg-gray-100"
+                :class="!book.hinhAnh ? getRandomColor(book._id) : ''"
             >
-                <BookOpen :size="80" class="text-black/20" />
+                <img
+                    v-if="book.hinhAnh"
+                    :src="book.hinhAnh"
+                    :alt="book.tenSach"
+                    class="w-full h-full object-cover"
+                />
+                <BookOpen v-else :size="80" class="text-black/20" />
+
                 <div
                     class="absolute bottom-4 left-4 bg-white border-2 border-black px-3 py-1 font-mono font-bold text-sm shadow-neo-sm"
                 >
@@ -87,6 +94,10 @@ const getRandomColor = (id: string) => {
                 <h1 class="text-4xl font-black font-display uppercase mb-4 leading-tight">
                     {{ book.tenSach }}
                 </h1>
+
+                <p class="text-gray-600 mb-6 italic" v-if="book.moTa">
+                    {{ book.moTa }}
+                </p>
 
                 <div class="space-y-4 mb-8 flex-1">
                     <div class="flex items-start gap-3">
@@ -184,9 +195,14 @@ const getRandomColor = (id: string) => {
                 <p>Bạn đang đăng ký mượn cuốn sách sau:</p>
                 <div class="bg-yellow-50 border-2 border-black p-3 flex gap-4">
                     <div
-                        class="w-16 h-20 bg-gray-200 border-2 border-black flex items-center justify-center shrink-0"
+                        class="w-16 h-20 bg-gray-200 border-2 border-black flex items-center justify-center shrink-0 overflow-hidden"
                     >
-                        <BookOpen :size="24" class="text-gray-400" />
+                        <img
+                            v-if="book?.hinhAnh"
+                            :src="book?.hinhAnh"
+                            class="w-full h-full object-cover"
+                        />
+                        <BookOpen v-else :size="24" class="text-gray-400" />
                     </div>
                     <div>
                         <p class="font-black text-lg uppercase leading-tight line-clamp-2">

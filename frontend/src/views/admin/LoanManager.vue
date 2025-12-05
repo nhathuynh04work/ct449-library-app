@@ -8,6 +8,7 @@ import {
     RotateCcw,
     MoreHorizontal,
     Ban,
+    Phone,
 } from "lucide-vue-next";
 import NeoButton from "@/components/ui/NeoButton.vue";
 import NeoSelect from "@/components/ui/NeoSelect.vue";
@@ -27,7 +28,6 @@ const showConfirm = ref(false);
 const selectedLoan = ref<TheoDoiMuonSach | null>(null);
 const actionType = ref<"APPROVE" | "REJECT" | "RETURN">("APPROVE");
 
-// Updated Options
 const statusOptions = [
     { value: "ALL", label: "Tất cả trạng thái" },
     { value: "DANG_CHO", label: "Chờ duyệt" },
@@ -88,9 +88,11 @@ const confirmAction = () => {
     );
 };
 
-const formatDate = (date: string) => new Date(date).toLocaleDateString("vi-VN");
+const formatDate = (date: string) => {
+    if (!date) return "—";
+    return new Date(date).toLocaleDateString("vi-VN");
+};
 
-// Updated Badge Logic
 const getStatusBadge = (status: string) => {
     switch (status) {
         case "DANG_CHO":
@@ -168,6 +170,9 @@ const getStatusBadge = (status: string) => {
                         <th class="p-4 border-r-2 border-black font-black uppercase w-32">
                             Ngày Mượn
                         </th>
+                        <th class="p-4 border-r-2 border-black font-black uppercase w-32">
+                            Hạn / Trả
+                        </th>
                         <th
                             class="p-4 border-r-2 border-black font-black uppercase w-40 text-center"
                         >
@@ -178,10 +183,10 @@ const getStatusBadge = (status: string) => {
                 </thead>
                 <tbody class="divide-y-2 divide-black">
                     <tr v-if="isLoading">
-                        <td colspan="6" class="p-8 text-center font-bold">Đang tải dữ liệu...</td>
+                        <td colspan="7" class="p-8 text-center font-bold">Đang tải dữ liệu...</td>
                     </tr>
                     <tr v-else-if="filteredLoans.length === 0">
-                        <td colspan="6" class="p-8 text-center text-gray-500 font-bold">
+                        <td colspan="7" class="p-8 text-center text-gray-500 font-bold">
                             Không tìm thấy phiếu mượn nào.
                         </td>
                     </tr>
@@ -194,10 +199,20 @@ const getStatusBadge = (status: string) => {
                             {{ loan.maPhieuMuon }}
                         </td>
                         <td class="p-4 border-r-2 border-black">
-                            <p class="font-bold">{{ loan.docGia.hoLot }} {{ loan.docGia.ten }}</p>
-                            <p class="text-xs text-gray-500 font-mono">
-                                {{ loan.docGia.maDocGia }}
+                            <p class="font-bold text-lg">
+                                {{ loan.docGia.hoLot }} {{ loan.docGia.ten }}
                             </p>
+                            <div class="flex flex-col gap-0.5 mt-1">
+                                <span class="text-xs text-gray-500 font-mono">
+                                    {{ loan.docGia.maDocGia }}
+                                </span>
+                                <span
+                                    class="flex items-center gap-1 text-xs font-bold text-gray-600"
+                                >
+                                    <Phone :size="10" />
+                                    {{ loan.docGia.soDienThoai }}
+                                </span>
+                            </div>
                         </td>
                         <td class="p-4 border-r-2 border-black">
                             <p class="font-bold text-sm">{{ loan.banSao.sach.tenSach }}</p>
@@ -207,10 +222,37 @@ const getStatusBadge = (status: string) => {
                         </td>
                         <td class="p-4 border-r-2 border-black font-medium text-sm">
                             {{ formatDate(loan.ngayMuon) }}
-                            <div v-if="loan.ngayTra" class="text-xs text-green-600 mt-1">
-                                Trả: {{ formatDate(loan.ngayTra) }}
-                            </div>
                         </td>
+
+                        <td class="p-4 border-r-2 border-black font-medium text-sm">
+                            <div v-if="loan.trangThai === 'DA_TRA' && loan.ngayTra">
+                                <span class="block text-[10px] uppercase font-bold text-green-600"
+                                    >Đã trả</span
+                                >
+                                <span class="font-bold">{{ formatDate(loan.ngayTra) }}</span>
+                            </div>
+                            <div
+                                v-else-if="
+                                    loan.trangThai === 'DANG_MUON' || loan.trangThai === 'DANG_CHO'
+                                "
+                            >
+                                <span class="block text-[10px] uppercase font-bold text-gray-500"
+                                    >Hạn trả</span
+                                >
+                                <span
+                                    class="font-bold"
+                                    :class="
+                                        new Date() > new Date(loan.hanTra) ? 'text-red-600' : ''
+                                    "
+                                >
+                                    {{ formatDate(loan.hanTra) }}
+                                </span>
+                            </div>
+                            <span v-else class="text-gray-400 font-bold text-lg text-center block"
+                                >-</span
+                            >
+                        </td>
+
                         <td class="p-4 border-r-2 border-black text-center">
                             <span
                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black border-2 uppercase"

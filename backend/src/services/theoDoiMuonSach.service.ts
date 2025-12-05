@@ -9,6 +9,9 @@ import {
 } from "@/models/TheoDoiMuonSach.js";
 import mongoose from "mongoose";
 
+const MAX_BORROW_LIMIT = 5;
+const FINE_PER_DAY = 5000;
+
 export async function getHistoryByDocGia(docGiaId: string) {
 	const history = await TheoDoiMuonSach.find({ docGia: docGiaId })
 		.populate({
@@ -48,21 +51,38 @@ export async function updateLoanStatus(id: string, status: TrangThaiMuonType) {
 			status === TrangThaiMuon.DANG_MUON &&
 			previousStatus === TrangThaiMuon.DANG_CHO
 		) {
-			const updatedCopy = await BanSao.findOneAndUpdate(
+			// [Swap Logic from previous step kept here]
+			let updatedCopy = await BanSao.findOneAndUpdate(
 				{ _id: loan.banSao, trangThai: TrangThaiBanSao.AVAILABLE },
 				{ trangThai: TrangThaiBanSao.BORROWED },
 				{ session, new: true }
 			);
 
 			if (!updatedCopy) {
-				throw new BadRequestException(
-					"Bản sao này không còn khả dụng (đã bị mượn hoặc hư hỏng)."
-				);
+				const currentCopyInfo = await BanSao.findById(
+					loan.banSao
+				).session(session);
+				if (!currentCopyInfo)
+					throw new BadRequestException("Dữ liệu bản sao lỗi.");
+
+				const substituteCopy = await BanSao.findOne({
+					sach: currentCopyInfo.sach,
+					trangThai: TrangThaiBanSao.AVAILABLE,
+				}).session(session);
+
+				if (!substituteCopy) {
+					throw new BadRequestException(
+						"Rất tiếc, tất cả bản sao của sách này đều đã được mượn hết."
+					);
+				}
+
+				substituteCopy.trangThai = TrangThaiBanSao.BORROWED;
+				await substituteCopy.save({ session });
+				loan.banSao = substituteCopy._id as any;
 			}
 
-			// [LOGIC ADDED]: Set Start Date and Due Date (2 weeks) upon approval
 			const now = new Date();
-			const dueDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000); // +14 days
+			const dueDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
 
 			loan.ngayMuon = now;
 			loan.hanTra = dueDate;
@@ -82,7 +102,23 @@ export async function updateLoanStatus(id: string, status: TrangThaiMuonType) {
 				);
 
 				if (status === TrangThaiMuon.DA_TRA) {
-					loan.ngayTra = new Date();
+					const returnDate = new Date();
+					loan.ngayTra = returnDate;
+
+					// [LOGIC 3B]: Calculate Fine
+					if (returnDate > loan.hanTra) {
+						const diffTime = Math.abs(
+							returnDate.getTime() - loan.hanTra.getTime()
+						);
+						const diffDays = Math.ceil(
+							diffTime / (1000 * 60 * 60 * 24)
+						);
+
+						// Calculate fine
+						loan.tienPhat = diffDays * FINE_PER_DAY;
+					} else {
+						loan.tienPhat = 0;
+					}
 				}
 			}
 		}
@@ -103,10 +139,8 @@ export async function updateLoanStatus(id: string, status: TrangThaiMuonType) {
 export async function cancelLoanByUser(userId: string, loanId: string) {
 	const loan = await TheoDoiMuonSach.findOne({ _id: loanId, docGia: userId });
 
-	if (!loan) {
+	if (!loan)
 		throw new NotFoundException("Không tìm thấy yêu cầu mượn sách này.");
-	}
-
 	if (loan.trangThai !== TrangThaiMuon.DANG_CHO) {
 		throw new BadRequestException(
 			"Chỉ có thể hủy yêu cầu khi đang chờ duyệt."
