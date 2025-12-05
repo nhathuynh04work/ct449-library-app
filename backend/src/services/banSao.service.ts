@@ -10,8 +10,10 @@ export async function createBanSao(payload: CreateBanSaoPayload) {
 	return newBanSao.toObject();
 }
 
-export async function getAllBanSao() {
-	const listBanSao = await BanSao.find().populate({
+export async function getAllBanSao(sachId?: string) {
+	const filter = sachId ? { sach: sachId } : {};
+
+	const listBanSao = await BanSao.find(filter).populate({
 		path: "sach",
 		populate: { path: "tacGia danhMuc nhaXuatBan" },
 	});

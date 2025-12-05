@@ -13,7 +13,8 @@ export async function createBanSao(req: Request, res: Response) {
 }
 
 export async function getAllBanSao(req: Request, res: Response) {
-	const listBanSao = await banSaoService.getAllBanSao();
+	const { sachId } = req.query;
+	const listBanSao = await banSaoService.getAllBanSao(sachId as string);
 
 	res.status(200).json(listBanSao);
 }
