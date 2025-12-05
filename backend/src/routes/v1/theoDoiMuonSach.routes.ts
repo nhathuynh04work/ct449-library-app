@@ -4,10 +4,9 @@ import { authenticate } from "@/middlewares/auth.middleware.js";
 
 const router = Router();
 
-// Only logged in users can see their history
 router.get("/me", authenticate, controller.getMyHistory);
-
-router.get("/", authenticate, controller.getAllLoans); // Should add role check ideally
+router.get("/", authenticate, controller.getAllLoans);
 router.put("/:id/status", authenticate, controller.updateLoanStatus);
+router.patch("/:id/cancel", authenticate, controller.cancelMyLoan); // New route
 
 export default router;

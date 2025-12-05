@@ -8,6 +8,7 @@ export const TrangThaiMuon = {
 	DANG_MUON: "DANG_MUON", // Active / Approved
 	DA_TRA: "DA_TRA", // Returned
 	DA_TU_CHOI: "DA_TU_CHOI", // Rejected
+	DA_HUY: "DA_HUY", // Cancelled by User
 } as const;
 
 export type TrangThaiMuonType =
@@ -19,7 +20,7 @@ export interface ITheoDoiMuonSach {
 	banSao: Schema.Types.ObjectId | IBanSao;
 	ngayMuon: Date;
 	ngayTra?: Date | null;
-	trangThai: TrangThaiMuonType; // Added field
+	trangThai: TrangThaiMuonType;
 
 	createdAt?: Date;
 	updatedAt?: Date;

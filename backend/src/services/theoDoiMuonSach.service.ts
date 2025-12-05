@@ -1,20 +1,24 @@
 import { TrangThaiBanSao } from "@/constants/trangThaiBanSao.js";
 import { NotFoundException } from "@/errors/not-found.js";
+import { BadRequestException } from "@/errors/bad-request.js"; // Import this
 import { BanSao } from "@/models/BanSao.js";
-import { TheoDoiMuonSach, TrangThaiMuon, type TrangThaiMuonType } from "@/models/TheoDoiMuonSach.js";
+import {
+	TheoDoiMuonSach,
+	TrangThaiMuon,
+	type TrangThaiMuonType,
+} from "@/models/TheoDoiMuonSach.js";
 import mongoose from "mongoose";
 
 export async function getHistoryByDocGia(docGiaId: string) {
-	// Find records for this reader and populate deeply to get Book info
 	const history = await TheoDoiMuonSach.find({ docGia: docGiaId })
 		.populate({
 			path: "banSao",
 			populate: {
 				path: "sach",
-				select: "tenSach namXuatBan maSach", // Select only needed fields
+				select: "tenSach namXuatBan maSach",
 			},
 		})
-		.sort({ ngayMuon: -1 }); // Newest first
+		.sort({ createdAt: -1 }); // Sorted by creation time usually better for history
 
 	return history;
 }
@@ -37,10 +41,11 @@ export async function updateLoanStatus(id: string, status: TrangThaiMuonType) {
 		const loan = await TheoDoiMuonSach.findById(id).session(session);
 		if (!loan) throw new NotFoundException("Không tìm thấy phiếu mượn.");
 
-		// If Returning or Rejecting, release the Book Copy
+		// If Returning, Rejecting, or Cancelling, release the Book Copy
 		if (
 			status === TrangThaiMuon.DA_TRA ||
-			status === TrangThaiMuon.DA_TU_CHOI
+			status === TrangThaiMuon.DA_TU_CHOI ||
+			status === TrangThaiMuon.DA_HUY
 		) {
 			await BanSao.findByIdAndUpdate(
 				loan.banSao,
@@ -53,8 +58,6 @@ export async function updateLoanStatus(id: string, status: TrangThaiMuonType) {
 			}
 		}
 
-		// If Approving, we keep the Book Copy as BORROWED (which it already is from creation)
-
 		loan.trangThai = status;
 		await loan.save({ session });
 
@@ -66,4 +69,21 @@ export async function updateLoanStatus(id: string, status: TrangThaiMuonType) {
 	} finally {
 		session.endSession();
 	}
+}
+
+export async function cancelLoanByUser(userId: string, loanId: string) {
+	const loan = await TheoDoiMuonSach.findOne({ _id: loanId, docGia: userId });
+
+	if (!loan) {
+		throw new NotFoundException("Không tìm thấy yêu cầu mượn sách này.");
+	}
+
+	if (loan.trangThai !== TrangThaiMuon.DANG_CHO) {
+		throw new BadRequestException(
+			"Chỉ có thể hủy yêu cầu khi đang chờ duyệt."
+		);
+	}
+
+	// Reuse the logic to update status and release copy
+	return await updateLoanStatus(loanId, TrangThaiMuon.DA_HUY);
 }

@@ -18,3 +18,10 @@ export async function updateLoanStatus(req: Request, res: Response) {
 	const result = await service.updateLoanStatus(id, trangThai);
 	res.status(200).json(result);
 }
+
+export async function cancelMyLoan(req: Request, res: Response) {
+	const { id } = req.params as { id: string };
+	// req.user is populated by auth middleware
+	const result = await service.cancelLoanByUser(req.user.identifier, id);
+	res.status(200).json(result);
+}

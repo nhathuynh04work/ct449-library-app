@@ -38,4 +38,8 @@ export const booksApi = {
         const { data } = await api.get("/tracking/me");
         return data;
     },
+
+    cancelRequest: async (id: string): Promise<void> => {
+        await api.patch(`/tracking/${id}/cancel`);
+    },
 };

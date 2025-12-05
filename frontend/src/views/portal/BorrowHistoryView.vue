@@ -1,11 +1,20 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { ArrowLeft, Clock, CheckCircle, AlertCircle, XCircle } from "lucide-vue-next";
+import { ArrowLeft, Clock, CheckCircle, AlertCircle, XCircle, Trash2, Ban } from "lucide-vue-next";
 import { useBorrowHistory } from "@/features/books/queries";
+import { useCancelBorrow } from "@/features/books/mutations";
+import { useToast } from "@/composables/useToast";
+import NeoConfirmModal from "@/components/ui/NeoConfirmModal.vue";
 import type { TheoDoiMuonSach } from "@/types/models/TheoDoiMuonSach";
 
 const router = useRouter();
 const { data: history, isLoading } = useBorrowHistory();
+const { mutate: cancelBorrow, isPending: isCancelling } = useCancelBorrow();
+const { addToast } = useToast();
+
+const showConfirm = ref(false);
+const selectedRecord = ref<TheoDoiMuonSach | null>(null);
 
 const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("vi-VN");
@@ -21,8 +30,14 @@ const getStatusBadge = (record: TheoDoiMuonSach) => {
             };
         case "DA_TU_CHOI":
             return {
-                text: "Từ chối",
+                text: "Bị từ chối",
                 class: "bg-red-100 text-red-800 border-red-300",
+                icon: Ban,
+            };
+        case "DA_HUY":
+            return {
+                text: "Đã hủy",
+                class: "bg-gray-100 text-gray-500 border-gray-300",
                 icon: XCircle,
             };
         case "DA_TRA":
@@ -32,19 +47,16 @@ const getStatusBadge = (record: TheoDoiMuonSach) => {
                 icon: CheckCircle,
             };
         case "DANG_MUON":
-            // Check for overdue (14 days limit)
             // eslint-disable-next-line no-case-declarations
             const isOverdue =
                 new Date().getTime() - new Date(record.ngayMuon).getTime() >
                 14 * 24 * 60 * 60 * 1000;
-
-            if (isOverdue) {
+            if (isOverdue)
                 return {
                     text: "Quá hạn",
                     class: "bg-red-200 text-red-900 border-red-400 font-bold",
                     icon: AlertCircle,
                 };
-            }
             return {
                 text: "Đang mượn",
                 class: "bg-green-100 text-green-800 border-green-300",
@@ -57,6 +69,31 @@ const getStatusBadge = (record: TheoDoiMuonSach) => {
                 icon: Clock,
             };
     }
+};
+
+const handleCancelClick = (item: TheoDoiMuonSach) => {
+    selectedRecord.value = item;
+    showConfirm.value = true;
+};
+
+const confirmCancel = () => {
+    if (!selectedRecord.value) return;
+
+    cancelBorrow(selectedRecord.value._id, {
+        onSuccess: () => {
+            addToast({
+                title: "Thành công",
+                description: "Đã hủy yêu cầu mượn sách.",
+                variant: "success",
+            });
+            showConfirm.value = false;
+            selectedRecord.value = null;
+        },
+        onError: (err) => {
+            addToast({ title: "Lỗi", description: err.message, variant: "error" });
+            showConfirm.value = false;
+        },
+    });
 };
 </script>
 
@@ -80,13 +117,18 @@ const getStatusBadge = (record: TheoDoiMuonSach) => {
                     <tr class="bg-yellow-300 border-b-4 border-black">
                         <th class="p-4 font-black uppercase border-r-2 border-black w-20">#</th>
                         <th class="p-4 font-black uppercase border-r-2 border-black">Tên Sách</th>
-                        <th class="p-4 font-black uppercase border-r-2 border-black w-40">
+                        <th class="p-4 font-black uppercase border-r-2 border-black w-32">
                             Ngày Mượn
                         </th>
-                        <th class="p-4 font-black uppercase border-r-2 border-black w-40">
+                        <th class="p-4 font-black uppercase border-r-2 border-black w-32">
                             Ngày Trả
                         </th>
-                        <th class="p-4 font-black uppercase w-40 text-center">Trạng Thái</th>
+                        <th
+                            class="p-4 font-black uppercase w-40 text-center border-r-2 border-black"
+                        >
+                            Trạng Thái
+                        </th>
+                        <th class="p-4 font-black uppercase w-24 text-center">Hủy</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y-2 divide-black">
@@ -108,7 +150,7 @@ const getStatusBadge = (record: TheoDoiMuonSach) => {
                         <td class="p-4 border-r-2 border-black font-medium">
                             {{ item.ngayTra ? formatDate(item.ngayTra) : "—" }}
                         </td>
-                        <td class="p-4 text-center align-middle">
+                        <td class="p-4 text-center align-middle border-r-2 border-black">
                             <span
                                 class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold border-2"
                                 :class="getStatusBadge(item).class"
@@ -117,14 +159,37 @@ const getStatusBadge = (record: TheoDoiMuonSach) => {
                                 {{ getStatusBadge(item).text }}
                             </span>
                         </td>
+                        <td class="p-4 text-center align-middle">
+                            <button
+                                v-if="item.trangThai === 'DANG_CHO'"
+                                @click="handleCancelClick(item)"
+                                class="p-2 text-red-500 hover:bg-red-100 rounded transition-colors"
+                                title="Hủy yêu cầu"
+                            >
+                                <Trash2 :size="18" />
+                            </button>
+                            <span v-else class="text-gray-300 text-2xl leading-none select-none"
+                                >&times;</span
+                            >
+                        </td>
                     </tr>
                     <tr v-if="!history || history.length === 0">
-                        <td colspan="5" class="p-8 text-center text-gray-500 font-bold italic">
+                        <td colspan="6" class="p-8 text-center text-gray-500 font-bold italic">
                             Bạn chưa mượn cuốn sách nào.
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
+
+        <NeoConfirmModal
+            v-if="showConfirm"
+            title="Hủy Yêu Cầu"
+            description="Bạn có chắc chắn muốn hủy yêu cầu mượn sách này không?"
+            variant="danger"
+            :processing="isCancelling"
+            @close="showConfirm = false"
+            @confirm="confirmCancel"
+        />
     </div>
 </template>

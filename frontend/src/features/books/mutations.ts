@@ -33,3 +33,17 @@ export function useBorrowBook() {
         },
     });
 }
+
+export function useCancelBorrow() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (id: string) => booksApi.cancelRequest(id),
+        onSuccess: () => {
+            // Invalidate history to show new status
+            queryClient.invalidateQueries({ queryKey: ["borrow-history"] });
+            // Invalidate books to update availability counts
+            queryClient.invalidateQueries({ queryKey: ["books"] });
+        },
+    });
+}
