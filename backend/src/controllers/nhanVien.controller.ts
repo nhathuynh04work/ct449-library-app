@@ -6,3 +6,8 @@ export async function registerNhanVien(req: Request, res: Response) {
 
 	res.status(201).json(nhanVien);
 }
+
+export async function getAllNhanVien(req: Request, res: Response) {
+	const list = await nhanVienService.getAllNhanVien();
+	res.status(200).json(list);
+}

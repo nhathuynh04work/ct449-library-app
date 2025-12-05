@@ -11,3 +11,7 @@ export async function registerDocGia(payload: RegisterDocGiaPayload) {
 
 	return newDocGia.toObject();
 }
+
+export async function getAllDocGia() {
+	return await DocGia.find().select("-matKhau").sort({ createdAt: -1 });
+}

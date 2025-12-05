@@ -12,6 +12,8 @@ import DashboardView from "@/views/admin/DashboardView.vue";
 import BookManager from "@/views/admin/BookManager.vue";
 import ResourceManager from "@/views/admin/ResourceManager.vue";
 import LoanManager from "@/views/admin/LoanManager.vue";
+import EmployeeManager from "@/views/admin/EmployeeManager.vue";
+import ReaderManager from "@/views/admin/ReaderManager.vue";
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -65,6 +67,8 @@ const router = createRouter({
                 { path: "books", name: "admin-books", component: BookManager },
                 { path: "resources", name: "admin-resources", component: ResourceManager },
                 { path: "loans", name: "admin-loans", component: LoanManager },
+                { path: "employees", name: "admin-employees", component: EmployeeManager },
+                { path: "readers", name: "admin-readers", component: ReaderManager },
                 { path: "", redirect: { name: "admin-dashboard" } },
             ],
         },

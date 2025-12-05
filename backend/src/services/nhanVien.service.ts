@@ -11,3 +11,7 @@ export async function registerNhanVien(payload: RegisterNhanVienPayload) {
 
 	return newNhanVien.toObject();
 }
+
+export async function getAllNhanVien() {
+	return await NhanVien.find().select("-matKhau").sort({ createdAt: -1 });
+}

@@ -11,5 +11,6 @@ export interface NhanVien {
     diaChi: string;
     soDienThoai: string;
 
+    createdAt?: Date;
     _id: string;
 }
