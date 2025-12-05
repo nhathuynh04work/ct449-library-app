@@ -47,10 +47,17 @@ const getStatusBadge = (record: TheoDoiMuonSach) => {
                 icon: CheckCircle,
             };
         case "DANG_MUON":
+            // Check Overdue using hanTra (Due Date) if available, else fallback to 14 days logic
             // eslint-disable-next-line no-case-declarations
-            const isOverdue =
-                new Date().getTime() - new Date(record.ngayMuon).getTime() >
-                14 * 24 * 60 * 60 * 1000;
+            const now = new Date().getTime();
+            let isOverdue = false;
+
+            if (record.hanTra) {
+                isOverdue = now > new Date(record.hanTra).getTime();
+            } else {
+                isOverdue = now - new Date(record.ngayMuon).getTime() > 14 * 24 * 60 * 60 * 1000;
+            }
+
             if (isOverdue)
                 return {
                     text: "Quá hạn",
@@ -121,7 +128,7 @@ const confirmCancel = () => {
                             Ngày Mượn
                         </th>
                         <th class="p-4 font-black uppercase border-r-2 border-black w-32">
-                            Ngày Trả
+                            Hạn Trả
                         </th>
                         <th
                             class="p-4 font-black uppercase w-40 text-center border-r-2 border-black"
@@ -147,9 +154,19 @@ const confirmCancel = () => {
                         <td class="p-4 border-r-2 border-black font-medium">
                             {{ formatDate(item.ngayMuon) }}
                         </td>
+
                         <td class="p-4 border-r-2 border-black font-medium">
-                            {{ item.ngayTra ? formatDate(item.ngayTra) : "—" }}
+                            <span v-if="item.ngayTra" class="text-gray-500"
+                                >Trả: {{ formatDate(item.ngayTra) }}</span
+                            >
+                            <span
+                                v-else-if="item.hanTra && item.trangThai === 'DANG_MUON'"
+                                class="text-red-600 font-bold"
+                                >{{ formatDate(item.hanTra) }}</span
+                            >
+                            <span v-else>—</span>
                         </td>
+
                         <td class="p-4 text-center align-middle border-r-2 border-black">
                             <span
                                 class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold border-2"

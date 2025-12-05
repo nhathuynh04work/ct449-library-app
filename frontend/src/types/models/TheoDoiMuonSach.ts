@@ -7,6 +7,7 @@ export interface TheoDoiMuonSach {
     _id: string;
     maPhieuMuon: string;
     ngayMuon: string; // ISO Date string
+    hanTra: string; // ISO Date string (Added)
     ngayTra?: string;
     trangThai: TrangThaiMuon;
     docGia: DocGia;

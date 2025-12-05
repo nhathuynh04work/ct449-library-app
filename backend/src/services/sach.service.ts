@@ -141,7 +141,29 @@ export async function muonSach(params: { docGiaId: string; sachId: string }) {
 	session.startTransaction();
 
 	try {
-		// UPDATED: Check for availability ONLY. Do not set to BORROWED yet.
+		// [LOGIC ADDED]: Check if user is already borrowing this book (any copy)
+		// 1. Find all copies of this book
+		const bookCopies = await BanSao.find({ sach: sachId })
+			.select("_id")
+			.session(session);
+		const copyIds = bookCopies.map((c) => c._id);
+
+		// 2. Check for active loans (Pending or Borrowing) for these copies
+		const existingLoan = await TheoDoiMuonSach.findOne({
+			docGia: docGiaId,
+			banSao: { $in: copyIds },
+			trangThai: {
+				$in: [TrangThaiMuon.DANG_CHO, TrangThaiMuon.DANG_MUON],
+			},
+		}).session(session);
+
+		if (existingLoan) {
+			throw new ConflictException(
+				"Bạn đang mượn hoặc đã yêu cầu sách này rồi. Vui lòng trả sách trước khi mượn lại."
+			);
+		}
+
+		// [LOGIC EXISTING]: Check availability
 		const banSao = await BanSao.findOne({
 			sach: sachId,
 			trangThai: TrangThaiBanSao.AVAILABLE,
@@ -153,11 +175,13 @@ export async function muonSach(params: { docGiaId: string; sachId: string }) {
 			);
 		}
 
-		// Create record with PENDING status
+		// Create record
 		const phieuMuon = new TheoDoiMuonSach({
 			docGia: docGiaId,
 			banSao: banSao._id,
 			ngayMuon: new Date(),
+			// hanTra will be set by default in schema (now + 14 days),
+			// but effectively reset upon approval.
 			trangThai: TrangThaiMuon.DANG_CHO,
 		});
 

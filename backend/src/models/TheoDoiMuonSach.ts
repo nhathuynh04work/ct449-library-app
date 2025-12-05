@@ -4,11 +4,11 @@ import type { IDocGia } from "./DocGia.js";
 import type { IBanSao } from "./BanSao.js";
 
 export const TrangThaiMuon = {
-	DANG_CHO: "DANG_CHO", // Pending Approval
-	DANG_MUON: "DANG_MUON", // Active / Approved
-	DA_TRA: "DA_TRA", // Returned
-	DA_TU_CHOI: "DA_TU_CHOI", // Rejected
-	DA_HUY: "DA_HUY", // Cancelled by User
+	DANG_CHO: "DANG_CHO",
+	DANG_MUON: "DANG_MUON",
+	DA_TRA: "DA_TRA",
+	DA_TU_CHOI: "DA_TU_CHOI",
+	DA_HUY: "DA_HUY",
 } as const;
 
 export type TrangThaiMuonType =
@@ -19,6 +19,7 @@ export interface ITheoDoiMuonSach {
 	docGia: Schema.Types.ObjectId | IDocGia;
 	banSao: Schema.Types.ObjectId | IBanSao;
 	ngayMuon: Date;
+	hanTra: Date; // Added Due Date
 	ngayTra?: Date | null;
 	trangThai: TrangThaiMuonType;
 
@@ -49,6 +50,12 @@ const theoDoiMuonSachSchema = new Schema<ITheoDoiMuonSach>(
 			type: Date,
 			required: true,
 			default: Date.now,
+		},
+		hanTra: {
+			type: Date,
+			required: true,
+			// Default 14 days from creation (can be updated on approval)
+			default: () => new Date(+new Date() + 14 * 24 * 60 * 60 * 1000),
 		},
 		ngayTra: {
 			type: Date,

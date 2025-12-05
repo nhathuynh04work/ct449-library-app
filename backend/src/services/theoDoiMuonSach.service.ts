@@ -48,7 +48,6 @@ export async function updateLoanStatus(id: string, status: TrangThaiMuonType) {
 			status === TrangThaiMuon.DANG_MUON &&
 			previousStatus === TrangThaiMuon.DANG_CHO
 		) {
-			// Attempt to lock the copy. It must be AVAILABLE.
 			const updatedCopy = await BanSao.findOneAndUpdate(
 				{ _id: loan.banSao, trangThai: TrangThaiBanSao.AVAILABLE },
 				{ trangThai: TrangThaiBanSao.BORROWED },
@@ -60,6 +59,13 @@ export async function updateLoanStatus(id: string, status: TrangThaiMuonType) {
 					"Bản sao này không còn khả dụng (đã bị mượn hoặc hư hỏng)."
 				);
 			}
+
+			// [LOGIC ADDED]: Set Start Date and Due Date (2 weeks) upon approval
+			const now = new Date();
+			const dueDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000); // +14 days
+
+			loan.ngayMuon = now;
+			loan.hanTra = dueDate;
 		}
 
 		// --- RETURNING / REJECTING / CANCELLING ---
@@ -68,7 +74,6 @@ export async function updateLoanStatus(id: string, status: TrangThaiMuonType) {
 			status === TrangThaiMuon.DA_TU_CHOI ||
 			status === TrangThaiMuon.DA_HUY
 		) {
-			// Only release the book if it was actually borrowed (locked)
 			if (previousStatus === TrangThaiMuon.DANG_MUON) {
 				await BanSao.findByIdAndUpdate(
 					loan.banSao,
@@ -80,7 +85,6 @@ export async function updateLoanStatus(id: string, status: TrangThaiMuonType) {
 					loan.ngayTra = new Date();
 				}
 			}
-			// If previousStatus was DANG_CHO, the book is already AVAILABLE, so no action needed on BanSao.
 		}
 
 		loan.trangThai = status;
