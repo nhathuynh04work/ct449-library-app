@@ -13,6 +13,16 @@ export const resourcesApi = {
         const { data } = await api.post("/tacgia", payload);
         return data;
     },
+    updateAuthor: async ({
+        id,
+        payload,
+    }: {
+        id: string;
+        payload: { tenTacGia?: string; tieuSu?: string };
+    }): Promise<TacGia> => {
+        const { data } = await api.put(`/tacgia/${id}`, payload);
+        return data;
+    },
     deleteAuthor: async (id: string): Promise<void> => {
         await api.delete(`/tacgia/${id}`);
     },
@@ -29,6 +39,16 @@ export const resourcesApi = {
         const { data } = await api.post("/nhaxuatban", payload);
         return data;
     },
+    updatePublisher: async ({
+        id,
+        payload,
+    }: {
+        id: string;
+        payload: { tenNhaXuatBan?: string; diaChi?: string };
+    }): Promise<NhaXuatBan> => {
+        const { data } = await api.put(`/nhaxuatban/${id}`, payload);
+        return data;
+    },
     deletePublisher: async (id: string): Promise<void> => {
         await api.delete(`/nhaxuatban/${id}`);
     },
@@ -40,6 +60,16 @@ export const resourcesApi = {
     },
     createCategory: async (payload: { tenDanhMuc: string }): Promise<DanhMuc> => {
         const { data } = await api.post("/danhmuc", payload);
+        return data;
+    },
+    updateCategory: async ({
+        id,
+        payload,
+    }: {
+        id: string;
+        payload: { tenDanhMuc: string };
+    }): Promise<DanhMuc> => {
+        const { data } = await api.put(`/danhmuc/${id}`, payload);
         return data;
     },
     deleteCategory: async (id: string): Promise<void> => {

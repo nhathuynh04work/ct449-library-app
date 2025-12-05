@@ -9,6 +9,13 @@ export function useCreateAuthor() {
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ["authors"] }),
     });
 }
+export function useUpdateAuthor() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: resourcesApi.updateAuthor,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["authors"] }),
+    });
+}
 export function useDeleteAuthor() {
     const queryClient = useQueryClient();
     return useMutation({
@@ -25,6 +32,13 @@ export function useCreatePublisher() {
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ["publishers"] }),
     });
 }
+export function useUpdatePublisher() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: resourcesApi.updatePublisher,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["publishers"] }),
+    });
+}
 export function useDeletePublisher() {
     const queryClient = useQueryClient();
     return useMutation({
@@ -38,6 +52,13 @@ export function useCreateCategory() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: resourcesApi.createCategory,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["categories"] }),
+    });
+}
+export function useUpdateCategory() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: resourcesApi.updateCategory,
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ["categories"] }),
     });
 }

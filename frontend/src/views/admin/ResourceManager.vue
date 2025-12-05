@@ -1,50 +1,80 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { Users, Building, Tag, Plus, Trash2, Loader2, Search, BookOpen } from "lucide-vue-next";
+import {
+    Users,
+    Building,
+    Tag,
+    Plus,
+    Trash2,
+    Loader2,
+    Search,
+    BookOpen,
+    Edit,
+} from "lucide-vue-next";
 import NeoButton from "@/components/ui/NeoButton.vue";
 import NeoInput from "@/components/ui/NeoInput.vue";
 import BaseModal from "@/components/common/BaseModal.vue";
+import NeoConfirmModal from "@/components/ui/NeoConfirmModal.vue";
 import { useAuthors, usePublishers, useCategories } from "@/features/resources/queries";
 import {
     useCreateAuthor,
+    useUpdateAuthor,
     useDeleteAuthor,
     useCreatePublisher,
+    useUpdatePublisher,
     useDeletePublisher,
     useCreateCategory,
+    useUpdateCategory,
     useDeleteCategory,
 } from "@/features/resources/mutations";
 import { useToast } from "@/composables/useToast";
-import NeoConfirmModal from "@/components/ui/NeoConfirmModal.vue";
+import type { TacGia } from "@/types/models/TacGia";
+import type { NhaXuatBan } from "@/types/models/NhaXuatBan";
+import type { DanhMuc } from "@/types/models/DanhMuc";
 
 type Tab = "AUTHORS" | "PUBLISHERS" | "CATEGORIES";
 const activeTab = ref<Tab>("AUTHORS");
 const searchQuery = ref("");
 const { addToast } = useToast();
 
-// Queries
 const { data: authors, isLoading: l1 } = useAuthors();
 const { data: publishers, isLoading: l2 } = usePublishers();
 const { data: categories, isLoading: l3 } = useCategories();
 
-// Mutations
 const createAuthor = useCreateAuthor();
+const updateAuthor = useUpdateAuthor();
 const deleteAuthor = useDeleteAuthor();
+
 const createPublisher = useCreatePublisher();
+const updatePublisher = useUpdatePublisher();
 const deletePublisher = useDeletePublisher();
+
 const createCategory = useCreateCategory();
+const updateCategory = useUpdateCategory();
 const deleteCategory = useDeleteCategory();
 
-// UI State
 const showModal = ref(false);
+const isEditMode = ref(false);
+const editingId = ref<string | null>(null);
 const deleteId = ref<string | null>(null);
+
 const formData = ref({
     name: "",
     extra: "",
 });
 
 const isLoading = computed(() => l1.value || l2.value || l3.value);
+const isSubmitting = computed(() =>
+    [
+        createAuthor,
+        updateAuthor,
+        createPublisher,
+        updatePublisher,
+        createCategory,
+        updateCategory,
+    ].some((m) => m.isPending.value),
+);
 
-// Typed Filters to avoid 'any'
 const filteredAuthors = computed(() =>
     (authors.value || []).filter((a) =>
         a.tenTacGia.toLowerCase().includes(searchQuery.value.toLowerCase()),
@@ -63,31 +93,94 @@ const filteredCategories = computed(() =>
     ),
 );
 
-const handleOpenModal = () => {
+const handleOpenCreate = () => {
+    isEditMode.value = false;
+    editingId.value = null;
     formData.value = { name: "", extra: "" };
     showModal.value = true;
 };
 
+const handleOpenEdit = (item: TacGia | NhaXuatBan | DanhMuc) => {
+    isEditMode.value = true;
+    editingId.value = item._id;
+
+    if (activeTab.value === "AUTHORS") {
+        const author = item as TacGia;
+        formData.value = { name: author.tenTacGia, extra: author.tieuSu || "" };
+    } else if (activeTab.value === "PUBLISHERS") {
+        const publisher = item as NhaXuatBan;
+        formData.value = { name: publisher.tenNhaXuatBan, extra: publisher.diaChi || "" };
+    } else {
+        const category = item as DanhMuc;
+        formData.value = { name: category.tenDanhMuc, extra: "" };
+    }
+    showModal.value = true;
+};
+
 const handleSubmit = () => {
-    if (!formData.value.name) return;
+    if (!formData.value.name.trim()) return;
 
     const onSuccess = () => {
-        addToast({ title: "Thành công", variant: "success" });
+        addToast({
+            title: isEditMode.value ? "Cập nhật thành công" : "Tạo mới thành công",
+            variant: "success",
+        });
         showModal.value = false;
     };
 
+    const onError = () => {
+        addToast({
+            title: "Lỗi",
+            description: "Không thể thực hiện thao tác.",
+            variant: "error",
+        });
+    };
+
     if (activeTab.value === "AUTHORS") {
-        createAuthor.mutate(
-            { tenTacGia: formData.value.name, tieuSu: formData.value.extra },
-            { onSuccess },
-        );
+        if (isEditMode.value && editingId.value) {
+            updateAuthor.mutate(
+                {
+                    id: editingId.value,
+                    payload: { tenTacGia: formData.value.name, tieuSu: formData.value.extra },
+                },
+                { onSuccess, onError },
+            );
+        } else {
+            createAuthor.mutate(
+                { tenTacGia: formData.value.name, tieuSu: formData.value.extra },
+                { onSuccess, onError },
+            );
+        }
     } else if (activeTab.value === "PUBLISHERS") {
-        createPublisher.mutate(
-            { tenNhaXuatBan: formData.value.name, diaChi: formData.value.extra || "Chưa cập nhật" },
-            { onSuccess },
-        );
+        if (isEditMode.value && editingId.value) {
+            updatePublisher.mutate(
+                {
+                    id: editingId.value,
+                    payload: {
+                        tenNhaXuatBan: formData.value.name,
+                        diaChi: formData.value.extra || "Chưa cập nhật",
+                    },
+                },
+                { onSuccess, onError },
+            );
+        } else {
+            createPublisher.mutate(
+                {
+                    tenNhaXuatBan: formData.value.name,
+                    diaChi: formData.value.extra || "Chưa cập nhật",
+                },
+                { onSuccess, onError },
+            );
+        }
     } else {
-        createCategory.mutate({ tenDanhMuc: formData.value.name }, { onSuccess });
+        if (isEditMode.value && editingId.value) {
+            updateCategory.mutate(
+                { id: editingId.value, payload: { tenDanhMuc: formData.value.name } },
+                { onSuccess, onError },
+            );
+        } else {
+            createCategory.mutate({ tenDanhMuc: formData.value.name }, { onSuccess, onError });
+        }
     }
 };
 
@@ -105,106 +198,118 @@ const confirmDelete = () => {
     else deleteCategory.mutate(deleteId.value, { onSuccess });
 };
 
-const getHeaderColor = computed(() => {
+const getThemeColor = (type: "bg" | "border" | "hover") => {
+    const map = {
+        AUTHORS: { bg: "bg-yellow-300", border: "border-yellow-300", hover: "hover:bg-yellow-300" },
+        PUBLISHERS: { bg: "bg-blue-300", border: "border-blue-300", hover: "hover:bg-blue-300" },
+        CATEGORIES: { bg: "bg-green-300", border: "border-green-300", hover: "hover:bg-green-300" },
+    };
+    return map[activeTab.value][type];
+};
+
+const getModalTitle = computed(() => {
+    const action = isEditMode.value ? "Chỉnh sửa" : "Thêm";
     switch (activeTab.value) {
         case "AUTHORS":
-            return "bg-yellow-300";
+            return `${action} Tác Giả`;
         case "PUBLISHERS":
-            return "bg-blue-300";
+            return `${action} Nhà Xuất Bản`;
         case "CATEGORIES":
-            return "bg-green-300";
+            return `${action} Danh Mục`;
         default:
-            return "bg-gray-200";
+            return `${action} Mới`;
     }
 });
 
-const getModalTitle = computed(() => {
-    switch (activeTab.value) {
-        case "AUTHORS":
-            return "Thêm Tác Giả";
-        case "PUBLISHERS":
-            return "Thêm Nhà Xuất Bản";
-        case "CATEGORIES":
-            return "Thêm Danh Mục";
-        default:
-            return "Thêm Mới";
-    }
-});
+// Helper to generate precise classes for tabs
+const getTabButtonClass = (tabName: Tab) => {
+    const isActive = activeTab.value === tabName;
+    const base =
+        "px-6 py-3 font-black uppercase transition-all flex items-center gap-2 border-4 border-black relative -bottom-2 whitespace-nowrap";
+
+    // Inactive: White bg, shadow, move on hover
+    const inactive =
+        "bg-white hover:translate-y-[-2px] active:translate-y-[0px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:shadow-none";
+
+    // Active: Colored bg, no shadow, lifted up, z-index to cover border
+    let activeColor = "";
+    if (tabName === "AUTHORS") activeColor = "bg-yellow-300";
+    else if (tabName === "PUBLISHERS") activeColor = "bg-blue-300";
+    else if (tabName === "CATEGORIES") activeColor = "bg-green-300";
+
+    const active = `${activeColor} translate-y-[-2px] shadow-none z-10`;
+
+    return isActive ? `${base} ${active}` : `${base} ${inactive}`;
+};
 </script>
 
 <template>
-    <div class="space-y-6">
+    <div class="space-y-8">
         <div class="flex gap-4 border-b-4 border-black pb-1 overflow-x-auto">
             <button
                 @click="
                     activeTab = 'AUTHORS';
                     searchQuery = '';
                 "
-                class="px-6 py-2 font-bold uppercase transition-all flex items-center gap-2 border-t-4 border-l-4 border-r-4 border-black relative -bottom-2 bg-white hover:bg-yellow-100 whitespace-nowrap"
-                :class="{ 'bg-yellow-300 hover:bg-yellow-300': activeTab === 'AUTHORS' }"
+                :class="getTabButtonClass('AUTHORS')"
             >
-                <Users :size="18" /> Tác Giả
+                <Users :size="20" stroke-width="3" /> Tác Giả
             </button>
             <button
                 @click="
                     activeTab = 'PUBLISHERS';
                     searchQuery = '';
                 "
-                class="px-6 py-2 font-bold uppercase transition-all flex items-center gap-2 border-t-4 border-l-4 border-r-4 border-black relative -bottom-2 bg-white hover:bg-blue-100 whitespace-nowrap"
-                :class="{ 'bg-blue-300 hover:bg-blue-300': activeTab === 'PUBLISHERS' }"
+                :class="getTabButtonClass('PUBLISHERS')"
             >
-                <Building :size="18" /> Nhà Xuất Bản
+                <Building :size="20" stroke-width="3" /> Nhà Xuất Bản
             </button>
             <button
                 @click="
                     activeTab = 'CATEGORIES';
                     searchQuery = '';
                 "
-                class="px-6 py-2 font-bold uppercase transition-all flex items-center gap-2 border-t-4 border-l-4 border-r-4 border-black relative -bottom-2 bg-white hover:bg-green-100 whitespace-nowrap"
-                :class="{ 'bg-green-300 hover:bg-green-300': activeTab === 'CATEGORIES' }"
+                :class="getTabButtonClass('CATEGORIES')"
             >
-                <Tag :size="18" /> Danh Mục
+                <Tag :size="20" stroke-width="3" /> Danh Mục
             </button>
         </div>
 
         <div
-            class="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-4 border-4 border-black shadow-neo"
+            class="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-5 border-4 border-black shadow-neo"
         >
             <div class="relative w-full md:w-96">
-                <Search class="absolute left-3 top-3 text-gray-500" :size="20" />
+                <Search class="absolute left-3 top-3.5 text-black" :size="20" stroke-width="3" />
                 <input
                     v-model="searchQuery"
                     type="text"
-                    :placeholder="`Tìm kiếm ${activeTab === 'AUTHORS' ? 'tác giả' : activeTab === 'PUBLISHERS' ? 'nhà xuất bản' : 'danh mục'}...`"
-                    class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-2 border-black font-bold outline-none focus:shadow-neo-sm transition-all placeholder:font-normal"
+                    :placeholder="`Tìm kiếm...`"
+                    class="w-full pl-10 pr-4 py-3 bg-gray-50 border-2 border-black font-bold outline-none focus:shadow-neo-sm transition-all placeholder:text-gray-400 placeholder:font-normal"
                 />
             </div>
 
             <NeoButton
-                @click="handleOpenModal"
+                @click="handleOpenCreate"
                 class="w-full md:w-auto flex items-center justify-center gap-2"
+                variant="primary"
             >
-                <Plus :size="20" stroke-width="3" /> Thêm Mới
+                <Plus :size="20" stroke-width="4" /> Thêm Mới
             </NeoButton>
         </div>
 
-        <div class="bg-white border-4 border-black shadow-neo min-h-[400px]">
-            <div v-if="isLoading" class="flex flex-col items-center justify-center py-20">
+        <div class="bg-white border-4 border-black shadow-neo min-h-[400px] relative">
+            <div
+                v-if="isLoading"
+                class="absolute inset-0 flex flex-col items-center justify-center bg-white/80 z-10 backdrop-blur-sm"
+            >
                 <Loader2 :size="48" class="animate-spin text-black mb-4" />
-                <p class="font-bold text-xl uppercase">Đang tải dữ liệu...</p>
+                <p class="font-black text-xl uppercase">Đang tải dữ liệu...</p>
             </div>
 
-            <div v-else class="overflow-x-auto">
+            <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr
-                            class="border-b-4 border-black text-black"
-                            :class="{
-                                'bg-yellow-300': activeTab === 'AUTHORS',
-                                'bg-blue-300': activeTab === 'PUBLISHERS',
-                                'bg-green-300': activeTab === 'CATEGORIES',
-                            }"
-                        >
+                        <tr class="border-b-4 border-black text-black" :class="getThemeColor('bg')">
                             <th
                                 class="p-4 border-r-2 border-black font-black uppercase tracking-wide w-16 text-center"
                             >
@@ -228,11 +333,11 @@ const getModalTitle = computed(() => {
                                 {{ activeTab === "AUTHORS" ? "Tiểu Sử" : "Địa Chỉ" }}
                             </th>
                             <th
-                                class="p-4 border-r-2 border-black font-black uppercase tracking-wide w-24 text-center"
+                                class="p-4 border-r-2 border-black font-black uppercase tracking-wide w-28 text-center"
                             >
                                 Số sách
                             </th>
-                            <th class="p-4 font-black uppercase tracking-wide w-32 text-center">
+                            <th class="p-4 font-black uppercase tracking-wide w-40 text-center">
                                 Thao tác
                             </th>
                         </tr>
@@ -242,35 +347,39 @@ const getModalTitle = computed(() => {
                         <tr
                             v-for="(item, index) in filteredAuthors"
                             :key="item._id"
-                            class="hover:bg-gray-50 transition-colors group"
+                            class="hover:bg-yellow-50 transition-colors group"
                         >
-                            <td
-                                class="p-4 border-r-2 border-black text-center font-bold text-gray-500"
-                            >
+                            <td class="p-4 border-r-2 border-black text-center font-bold">
                                 {{ index + 1 }}
                             </td>
                             <td class="p-4 border-r-2 border-black font-bold text-lg">
                                 {{ item.tenTacGia }}
                             </td>
-                            <td class="p-4 border-r-2 border-black text-gray-600 line-clamp-2">
-                                {{ item.tieuSu || "—" }}
+                            <td class="p-4 border-r-2 border-black font-medium text-gray-600">
+                                <span class="line-clamp-2">{{ item.tieuSu || "—" }}</span>
                             </td>
                             <td class="p-4 border-r-2 border-black text-center">
                                 <div
-                                    class="flex items-center justify-center gap-1 font-black text-lg"
+                                    class="flex items-center justify-center gap-1 font-black text-lg bg-white border-2 border-black py-1 px-2 shadow-sm inline-flex"
                                 >
-                                    <BookOpen :size="16" class="text-gray-400" />
-                                    {{ item.soLuongSach || 0 }}
+                                    <BookOpen :size="16" /> {{ item.soLuongSach || 0 }}
                                 </div>
                             </td>
-                            <td class="p-4 align-middle text-center">
-                                <button
-                                    @click="deleteId = item._id"
-                                    class="p-2 bg-red-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none active:bg-red-500 transition-all text-black"
-                                    title="Xóa"
-                                >
-                                    <Trash2 :size="18" />
-                                </button>
+                            <td class="p-4 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button
+                                        @click="handleOpenEdit(item)"
+                                        class="p-2 bg-white border-2 border-black shadow-neo-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all active:bg-gray-100"
+                                    >
+                                        <Edit :size="18" />
+                                    </button>
+                                    <button
+                                        @click="deleteId = item._id"
+                                        class="p-2 bg-red-400 border-2 border-black shadow-neo-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all active:bg-red-500"
+                                    >
+                                        <Trash2 :size="18" />
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -279,35 +388,39 @@ const getModalTitle = computed(() => {
                         <tr
                             v-for="(item, index) in filteredPublishers"
                             :key="item._id"
-                            class="hover:bg-gray-50 transition-colors group"
+                            class="hover:bg-blue-50 transition-colors group"
                         >
-                            <td
-                                class="p-4 border-r-2 border-black text-center font-bold text-gray-500"
-                            >
+                            <td class="p-4 border-r-2 border-black text-center font-bold">
                                 {{ index + 1 }}
                             </td>
                             <td class="p-4 border-r-2 border-black font-bold text-lg">
                                 {{ item.tenNhaXuatBan }}
                             </td>
-                            <td class="p-4 border-r-2 border-black text-gray-600">
+                            <td class="p-4 border-r-2 border-black font-medium text-gray-600">
                                 {{ item.diaChi }}
                             </td>
                             <td class="p-4 border-r-2 border-black text-center">
                                 <div
-                                    class="flex items-center justify-center gap-1 font-black text-lg"
+                                    class="flex items-center justify-center gap-1 font-black text-lg bg-white border-2 border-black py-1 px-2 shadow-sm inline-flex"
                                 >
-                                    <BookOpen :size="16" class="text-gray-400" />
-                                    {{ item.soLuongSach || 0 }}
+                                    <BookOpen :size="16" /> {{ item.soLuongSach || 0 }}
                                 </div>
                             </td>
-                            <td class="p-4 align-middle text-center">
-                                <button
-                                    @click="deleteId = item._id"
-                                    class="p-2 bg-red-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none active:bg-red-500 transition-all text-black"
-                                    title="Xóa"
-                                >
-                                    <Trash2 :size="18" />
-                                </button>
+                            <td class="p-4 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button
+                                        @click="handleOpenEdit(item)"
+                                        class="p-2 bg-white border-2 border-black shadow-neo-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all active:bg-gray-100"
+                                    >
+                                        <Edit :size="18" />
+                                    </button>
+                                    <button
+                                        @click="deleteId = item._id"
+                                        class="p-2 bg-red-400 border-2 border-black shadow-neo-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all active:bg-red-500"
+                                    >
+                                        <Trash2 :size="18" />
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -316,35 +429,40 @@ const getModalTitle = computed(() => {
                         <tr
                             v-for="(item, index) in filteredCategories"
                             :key="item._id"
-                            class="hover:bg-gray-50 transition-colors group"
+                            class="hover:bg-green-50 transition-colors group"
                         >
-                            <td
-                                class="p-4 border-r-2 border-black text-center font-bold text-gray-500"
-                            >
+                            <td class="p-4 border-r-2 border-black text-center font-bold">
                                 {{ index + 1 }}
                             </td>
                             <td class="p-4 border-r-2 border-black font-bold text-lg">
                                 <span
-                                    class="bg-green-100 border-2 border-black px-3 py-1 shadow-neo-sm inline-block"
-                                    >{{ item.tenDanhMuc }}</span
+                                    class="bg-white border-2 border-black px-3 py-1 shadow-neo-sm inline-block"
                                 >
+                                    {{ item.tenDanhMuc }}
+                                </span>
                             </td>
                             <td class="p-4 border-r-2 border-black text-center">
                                 <div
-                                    class="flex items-center justify-center gap-1 font-black text-lg"
+                                    class="flex items-center justify-center gap-1 font-black text-lg bg-white border-2 border-black py-1 px-2 shadow-sm inline-flex"
                                 >
-                                    <BookOpen :size="16" class="text-gray-400" />
-                                    {{ item.soLuongSach || 0 }}
+                                    <BookOpen :size="16" /> {{ item.soLuongSach || 0 }}
                                 </div>
                             </td>
-                            <td class="p-4 align-middle text-center">
-                                <button
-                                    @click="deleteId = item._id"
-                                    class="p-2 bg-red-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none active:bg-red-500 transition-all text-black"
-                                    title="Xóa"
-                                >
-                                    <Trash2 :size="18" />
-                                </button>
+                            <td class="p-4 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button
+                                        @click="handleOpenEdit(item)"
+                                        class="p-2 bg-white border-2 border-black shadow-neo-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all active:bg-gray-100"
+                                    >
+                                        <Edit :size="18" />
+                                    </button>
+                                    <button
+                                        @click="deleteId = item._id"
+                                        class="p-2 bg-red-400 border-2 border-black shadow-neo-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all active:bg-red-500"
+                                    >
+                                        <Trash2 :size="18" />
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -355,10 +473,10 @@ const getModalTitle = computed(() => {
         <BaseModal
             :isOpen="showModal"
             :title="getModalTitle"
-            :headerClass="getHeaderColor"
+            :headerClass="getThemeColor('bg')"
             @close="showModal = false"
         >
-            <div class="space-y-4">
+            <div class="space-y-5">
                 <NeoInput
                     id="name"
                     :label="
@@ -369,16 +487,19 @@ const getModalTitle = computed(() => {
                               : 'Tên Danh Mục'
                     "
                     v-model="formData.name"
-                    placeholder="Nhập tên..."
+                    placeholder="Nhập nội dung..."
                 />
 
-                <NeoInput
-                    v-if="activeTab === 'AUTHORS'"
-                    id="bio"
-                    label="Tiểu sử (Tùy chọn)"
-                    v-model="formData.extra"
-                    placeholder="Vài nét về tác giả..."
-                />
+                <div v-if="activeTab === 'AUTHORS'" class="flex flex-col gap-1">
+                    <label for="bio" class="font-bold text-sm ml-1">Tiểu sử</label>
+                    <textarea
+                        id="bio"
+                        v-model="formData.extra"
+                        rows="3"
+                        class="w-full p-3 border-2 border-black outline-none transition-all focus:shadow-neo-sm placeholder:text-gray-500 font-body resize-none"
+                        placeholder="Vài nét về tác giả..."
+                    ></textarea>
+                </div>
 
                 <NeoInput
                     v-if="activeTab === 'PUBLISHERS'"
@@ -388,8 +509,14 @@ const getModalTitle = computed(() => {
                     placeholder="Số nhà, tên đường, thành phố..."
                 />
 
-                <div class="flex justify-end pt-2 border-t-2 border-black mt-4">
-                    <NeoButton @click="handleSubmit" class="w-full"> Xác nhận Thêm </NeoButton>
+                <div class="flex justify-end pt-4 border-t-2 border-black gap-3 mt-6">
+                    <NeoButton type="button" variant="secondary" @click="showModal = false">
+                        Hủy
+                    </NeoButton>
+                    <NeoButton @click="handleSubmit" :disabled="isSubmitting" class="min-w-[120px]">
+                        <span v-if="isSubmitting">Đang lưu...</span>
+                        <span v-else>{{ isEditMode ? "Lưu thay đổi" : "Xác nhận thêm" }}</span>
+                    </NeoButton>
                 </div>
             </div>
         </BaseModal>
