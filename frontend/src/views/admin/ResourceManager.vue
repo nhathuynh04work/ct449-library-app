@@ -1,17 +1,9 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import {
-    Users,
-    Building,
-    Tag,
-    Plus,
-    Trash2,
-    Loader2,
-    Search,
-    BookOpen,
-} from "lucide-vue-next";
+import { Users, Building, Tag, Plus, Trash2, Loader2, Search, BookOpen } from "lucide-vue-next";
 import NeoButton from "@/components/ui/NeoButton.vue";
 import NeoInput from "@/components/ui/NeoInput.vue";
+import BaseModal from "@/components/common/BaseModal.vue";
 import { useAuthors, usePublishers, useCategories } from "@/features/resources/queries";
 import {
     useCreateAuthor,
@@ -112,6 +104,32 @@ const confirmDelete = () => {
         deletePublisher.mutate(deleteId.value, { onSuccess });
     else deleteCategory.mutate(deleteId.value, { onSuccess });
 };
+
+const getHeaderColor = computed(() => {
+    switch (activeTab.value) {
+        case "AUTHORS":
+            return "bg-yellow-300";
+        case "PUBLISHERS":
+            return "bg-blue-300";
+        case "CATEGORIES":
+            return "bg-green-300";
+        default:
+            return "bg-gray-200";
+    }
+});
+
+const getModalTitle = computed(() => {
+    switch (activeTab.value) {
+        case "AUTHORS":
+            return "Thêm Tác Giả";
+        case "PUBLISHERS":
+            return "Thêm Nhà Xuất Bản";
+        case "CATEGORIES":
+            return "Thêm Danh Mục";
+        default:
+            return "Thêm Mới";
+    }
+});
 </script>
 
 <template>
@@ -334,73 +352,47 @@ const confirmDelete = () => {
             </div>
         </div>
 
-        <div
-            v-if="showModal"
-            class="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-            @click.self="showModal = false"
+        <BaseModal
+            :isOpen="showModal"
+            :title="getModalTitle"
+            :headerClass="getHeaderColor"
+            @close="showModal = false"
         >
-            <div class="bg-white border-4 border-black shadow-neo w-full max-w-md animate-in">
-                <div
-                    class="p-4 border-b-4 border-black flex justify-between items-center"
-                    :class="{
-                        'bg-yellow-300': activeTab === 'AUTHORS',
-                        'bg-blue-300': activeTab === 'PUBLISHERS',
-                        'bg-green-300': activeTab === 'CATEGORIES',
-                    }"
-                >
-                    <h2 class="text-lg font-black uppercase font-display">
-                        Thêm
-                        {{
-                            activeTab === "AUTHORS"
-                                ? "Tác giả"
-                                : activeTab === "PUBLISHERS"
-                                  ? "Nhà Xuất Bản"
-                                  : "Danh Mục"
-                        }}
-                    </h2>
-                    <button
-                        @click="showModal = false"
-                        class="hover:bg-white/30 p-1 border-2 border-transparent hover:border-black transition-all"
-                    >
-                        ✕
-                    </button>
-                </div>
-                <div class="p-6 space-y-4">
-                    <NeoInput
-                        id="name"
-                        :label="
-                            activeTab === 'AUTHORS'
-                                ? 'Họ và Tên'
-                                : activeTab === 'PUBLISHERS'
-                                  ? 'Tên Nhà Xuất Bản'
-                                  : 'Tên Danh Mục'
-                        "
-                        v-model="formData.name"
-                        placeholder="Nhập tên..."
-                    />
+            <div class="space-y-4">
+                <NeoInput
+                    id="name"
+                    :label="
+                        activeTab === 'AUTHORS'
+                            ? 'Họ và Tên'
+                            : activeTab === 'PUBLISHERS'
+                              ? 'Tên Nhà Xuất Bản'
+                              : 'Tên Danh Mục'
+                    "
+                    v-model="formData.name"
+                    placeholder="Nhập tên..."
+                />
 
-                    <NeoInput
-                        v-if="activeTab === 'AUTHORS'"
-                        id="bio"
-                        label="Tiểu sử (Tùy chọn)"
-                        v-model="formData.extra"
-                        placeholder="Vài nét về tác giả..."
-                    />
+                <NeoInput
+                    v-if="activeTab === 'AUTHORS'"
+                    id="bio"
+                    label="Tiểu sử (Tùy chọn)"
+                    v-model="formData.extra"
+                    placeholder="Vài nét về tác giả..."
+                />
 
-                    <NeoInput
-                        v-if="activeTab === 'PUBLISHERS'"
-                        id="address"
-                        label="Địa chỉ"
-                        v-model="formData.extra"
-                        placeholder="Số nhà, tên đường, thành phố..."
-                    />
+                <NeoInput
+                    v-if="activeTab === 'PUBLISHERS'"
+                    id="address"
+                    label="Địa chỉ"
+                    v-model="formData.extra"
+                    placeholder="Số nhà, tên đường, thành phố..."
+                />
 
-                    <div class="flex justify-end pt-2">
-                        <NeoButton @click="handleSubmit" class="w-full"> Xác nhận Thêm </NeoButton>
-                    </div>
+                <div class="flex justify-end pt-2 border-t-2 border-black mt-4">
+                    <NeoButton @click="handleSubmit" class="w-full"> Xác nhận Thêm </NeoButton>
                 </div>
             </div>
-        </div>
+        </BaseModal>
 
         <NeoConfirmModal
             v-if="deleteId"
@@ -412,19 +404,3 @@ const confirmDelete = () => {
         />
     </div>
 </template>
-
-<style scoped>
-.animate-in {
-    animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-@keyframes popIn {
-    from {
-        opacity: 0;
-        transform: scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-</style>

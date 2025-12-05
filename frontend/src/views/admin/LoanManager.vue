@@ -9,6 +9,7 @@ import {
     MoreHorizontal,
     Ban,
     Phone,
+    FilterX,
 } from "lucide-vue-next";
 import NeoButton from "@/components/ui/NeoButton.vue";
 import NeoSelect from "@/components/ui/NeoSelect.vue";
@@ -22,8 +23,12 @@ const { data: loans, isLoading } = useLoans();
 const { mutate: updateStatus } = useUpdateLoanStatus();
 const { addToast } = useToast();
 
+// --- STATE ---
 const searchQuery = ref("");
 const statusFilter = ref("ALL");
+const startDate = ref(""); // YYYY-MM-DD
+const endDate = ref(""); // YYYY-MM-DD
+
 const showConfirm = ref(false);
 const selectedLoan = ref<TheoDoiMuonSach | null>(null);
 const actionType = ref<"APPROVE" | "REJECT" | "RETURN">("APPROVE");
@@ -37,20 +42,53 @@ const statusOptions = [
     { value: "DA_HUY", label: "Đã hủy" },
 ];
 
+// --- ROBUST FILTER ENGINE ---
 const filteredLoans = computed(() => {
     if (!loans.value) return [];
 
     return loans.value.filter((loan) => {
+        // 1. OMNI-SEARCH (Case insensitive)
+        const q = searchQuery.value.toLowerCase();
+        // Checks: Loan Code, User Name, User ID, Book Name, Book Copy Code
         const matchesSearch =
-            loan.maPhieuMuon.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-            loan.docGia.ten.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-            loan.docGia.maDocGia.toLowerCase().includes(searchQuery.value.toLowerCase());
+            !q || // Pass if query is empty
+            loan.maPhieuMuon.toLowerCase().includes(q) ||
+            loan.docGia.ten.toLowerCase().includes(q) ||
+            loan.docGia.maDocGia.toLowerCase().includes(q) ||
+            loan.banSao.sach.tenSach.toLowerCase().includes(q) ||
+            loan.banSao.maBanSao.toLowerCase().includes(q);
 
+        // 2. STATUS FILTER
         const matchesStatus = statusFilter.value === "ALL" || loan.trangThai === statusFilter.value;
-        return matchesSearch && matchesStatus;
+
+        // 3. DATE RANGE FILTER (Based on 'ngayMuon')
+        let matchesDate = true;
+        if (startDate.value || endDate.value) {
+            const loanDate = new Date(loan.ngayMuon).setHours(0, 0, 0, 0);
+
+            if (startDate.value) {
+                const start = new Date(startDate.value).setHours(0, 0, 0, 0);
+                if (loanDate < start) matchesDate = false;
+            }
+            if (endDate.value && matchesDate) {
+                // Only check end if start passed
+                const end = new Date(endDate.value).setHours(23, 59, 59, 999);
+                if (loanDate > end) matchesDate = false;
+            }
+        }
+
+        return matchesSearch && matchesStatus && matchesDate;
     });
 });
 
+const clearFilters = () => {
+    searchQuery.value = "";
+    statusFilter.value = "ALL";
+    startDate.value = "";
+    endDate.value = "";
+};
+
+// --- ACTIONS ---
 const handleAction = (loan: TheoDoiMuonSach, action: "APPROVE" | "REJECT" | "RETURN") => {
     selectedLoan.value = loan;
     actionType.value = action;
@@ -88,6 +126,7 @@ const confirmAction = () => {
     );
 };
 
+// --- UTILS ---
 const formatDate = (date: string) => {
     if (!date) return "—";
     return new Date(date).toLocaleDateString("vi-VN");
@@ -134,28 +173,62 @@ const getStatusBadge = (status: string) => {
 <template>
     <div class="space-y-6">
         <div
-            class="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-4 border-4 border-black shadow-neo"
+            class="bg-white p-4 border-4 border-black shadow-neo flex flex-col xl:flex-row gap-4 xl:items-end"
         >
-            <div class="flex items-center gap-2 w-full md:w-auto">
-                <div class="relative w-full md:w-80">
+            <div class="flex-1 min-w-[300px]">
+                <label class="text-xs font-black uppercase mb-1 block">Tìm kiếm</label>
+                <div class="relative w-full">
                     <Search class="absolute left-3 top-3 text-gray-500" :size="20" />
                     <input
                         v-model="searchQuery"
                         type="text"
-                        placeholder="Mã phiếu, tên độc giả..."
-                        class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-2 border-black font-bold outline-none focus:shadow-neo-sm transition-all"
+                        placeholder="Mã phiếu, độc giả (tên/ID), mã sách..."
+                        class="w-full pl-10 pr-4 py-2 bg-gray-50 border-2 border-black font-bold outline-none focus:shadow-neo-sm transition-all placeholder:font-normal"
                     />
                 </div>
             </div>
 
-            <div class="w-full md:w-64">
+            <div class="flex gap-2 w-full xl:w-auto">
+                <div>
+                    <label class="text-xs font-black uppercase mb-1 block">Từ ngày</label>
+                    <div class="relative">
+                        <input
+                            v-model="startDate"
+                            type="date"
+                            class="pl-3 pr-2 py-2 bg-gray-50 border-2 border-black font-bold outline-none focus:shadow-neo-sm transition-all w-full xl:w-40"
+                        />
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs font-black uppercase mb-1 block">Đến ngày</label>
+                    <div class="relative">
+                        <input
+                            v-model="endDate"
+                            type="date"
+                            class="pl-3 pr-2 py-2 bg-gray-50 border-2 border-black font-bold outline-none focus:shadow-neo-sm transition-all w-full xl:w-40"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full xl:w-56">
+                <label class="text-xs font-black uppercase mb-1 block">Trạng Thái</label>
                 <NeoSelect
                     id="status-filter"
                     :options="statusOptions"
                     v-model="statusFilter"
-                    placeholder="Lọc theo trạng thái"
+                    placeholder="Lọc trạng thái"
                 />
             </div>
+
+            <button
+                v-if="searchQuery || statusFilter !== 'ALL' || startDate || endDate"
+                @click="clearFilters"
+                class="px-3 py-2 bg-gray-200 border-2 border-black font-bold hover:bg-gray-300 transition-colors h-[42px] flex items-center justify-center"
+                title="Xóa bộ lọc"
+            >
+                <FilterX :size="20" />
+            </button>
         </div>
 
         <div class="bg-white border-4 border-black shadow-neo overflow-hidden min-h-[400px]">
@@ -185,11 +258,19 @@ const getStatusBadge = (status: string) => {
                     <tr v-if="isLoading">
                         <td colspan="7" class="p-8 text-center font-bold">Đang tải dữ liệu...</td>
                     </tr>
+
                     <tr v-else-if="filteredLoans.length === 0">
-                        <td colspan="7" class="p-8 text-center text-gray-500 font-bold">
-                            Không tìm thấy phiếu mượn nào.
+                        <td colspan="7" class="p-12 text-center text-gray-500">
+                            <div class="flex flex-col items-center gap-2">
+                                <Search :size="32" class="opacity-50" />
+                                <span class="font-bold">Không tìm thấy kết quả nào.</span>
+                                <span class="text-sm"
+                                    >Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.</span
+                                >
+                            </div>
                         </td>
                     </tr>
+
                     <tr
                         v-for="loan in filteredLoans"
                         :key="loan._id"
@@ -198,28 +279,35 @@ const getStatusBadge = (status: string) => {
                         <td class="p-4 border-r-2 border-black font-mono font-bold">
                             {{ loan.maPhieuMuon }}
                         </td>
+
                         <td class="p-4 border-r-2 border-black">
-                            <p class="font-bold text-lg">
+                            <p class="font-bold text-lg leading-tight">
                                 {{ loan.docGia.hoLot }} {{ loan.docGia.ten }}
                             </p>
                             <div class="flex flex-col gap-0.5 mt-1">
-                                <span class="text-xs text-gray-500 font-mono">
-                                    {{ loan.docGia.maDocGia }}
+                                <span
+                                    class="text-xs bg-black text-white px-1 py-0.5 w-fit font-mono rounded-sm"
+                                >
+                                    ID: {{ loan.docGia.maDocGia }}
                                 </span>
                                 <span
-                                    class="flex items-center gap-1 text-xs font-bold text-gray-600"
+                                    class="flex items-center gap-1 text-xs font-bold text-gray-600 mt-0.5"
                                 >
-                                    <Phone :size="10" />
-                                    {{ loan.docGia.soDienThoai }}
+                                    <Phone :size="10" /> {{ loan.docGia.soDienThoai }}
                                 </span>
                             </div>
                         </td>
+
                         <td class="p-4 border-r-2 border-black">
-                            <p class="font-bold text-sm">{{ loan.banSao.sach.tenSach }}</p>
-                            <p class="text-xs text-gray-500 font-mono">
-                                Bản sao: {{ loan.banSao.maBanSao }}
+                            <p class="font-bold text-sm leading-tight">
+                                {{ loan.banSao.sach.tenSach }}
+                            </p>
+                            <p class="text-xs text-gray-500 font-mono mt-1">
+                                Code:
+                                <span class="font-bold text-black">{{ loan.banSao.maBanSao }}</span>
                             </p>
                         </td>
+
                         <td class="p-4 border-r-2 border-black font-medium text-sm">
                             {{ formatDate(loan.ngayMuon) }}
                         </td>
@@ -231,11 +319,7 @@ const getStatusBadge = (status: string) => {
                                 >
                                 <span class="font-bold">{{ formatDate(loan.ngayTra) }}</span>
                             </div>
-                            <div
-                                v-else-if="
-                                    loan.trangThai === 'DANG_MUON' || loan.trangThai === 'DANG_CHO'
-                                "
-                            >
+                            <div v-else-if="['DANG_MUON', 'DANG_CHO'].includes(loan.trangThai)">
                                 <span class="block text-[10px] uppercase font-bold text-gray-500"
                                     >Hạn trả</span
                                 >
@@ -255,27 +339,26 @@ const getStatusBadge = (status: string) => {
 
                         <td class="p-4 border-r-2 border-black text-center">
                             <span
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black border-2 uppercase"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black border-2 uppercase whitespace-nowrap"
                                 :class="getStatusBadge(loan.trangThai).class"
                             >
                                 <component :is="getStatusBadge(loan.trangThai).icon" :size="14" />
                                 {{ getStatusBadge(loan.trangThai).label }}
                             </span>
                         </td>
+
                         <td class="p-4 text-center">
                             <div class="flex justify-center gap-2">
                                 <template v-if="loan.trangThai === 'DANG_CHO'">
                                     <button
                                         @click="handleAction(loan, 'APPROVE')"
-                                        class="p-2 bg-green-400 border-2 border-black shadow-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all text-black"
-                                        title="Duyệt"
+                                        class="p-2 bg-green-400 border-2 border-black shadow-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all text-black rounded"
                                     >
                                         <CheckCircle :size="18" />
                                     </button>
                                     <button
                                         @click="handleAction(loan, 'REJECT')"
-                                        class="p-2 bg-red-400 border-2 border-black shadow-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all text-black"
-                                        title="Từ chối"
+                                        class="p-2 bg-red-400 border-2 border-black shadow-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all text-black rounded"
                                     >
                                         <XCircle :size="18" />
                                     </button>
@@ -289,7 +372,7 @@ const getStatusBadge = (status: string) => {
                                         <RotateCcw :size="14" /> Trả Sách
                                     </NeoButton>
                                 </template>
-                                <span v-else class="text-gray-400 font-bold text-sm">—</span>
+                                <span v-else class="text-gray-300"><MoreHorizontal /></span>
                             </div>
                         </td>
                     </tr>
@@ -308,10 +391,10 @@ const getStatusBadge = (status: string) => {
             "
             :description="
                 actionType === 'APPROVE'
-                    ? 'Xác nhận cho độc giả mượn cuốn sách này? Hệ thống sẽ khóa bản sao.'
+                    ? 'Xác nhận cho độc giả mượn cuốn sách này?'
                     : actionType === 'REJECT'
                       ? 'Từ chối yêu cầu mượn sách này?'
-                      : 'Xác nhận độc giả đã trả sách? Sách sẽ được mở lại kho.'
+                      : 'Xác nhận độc giả đã trả sách?'
             "
             :variant="actionType === 'REJECT' ? 'danger' : 'info'"
             @close="showConfirm = false"

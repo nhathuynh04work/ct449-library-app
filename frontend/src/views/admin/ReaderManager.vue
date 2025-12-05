@@ -4,6 +4,7 @@ import { Search, Plus, Loader2 } from "lucide-vue-next";
 import NeoButton from "@/components/ui/NeoButton.vue";
 import NeoInput from "@/components/ui/NeoInput.vue";
 import NeoSelect from "@/components/ui/NeoSelect.vue";
+import BaseModal from "@/components/common/BaseModal.vue";
 import { useReaders } from "@/features/management/queries";
 import { useCreateReader } from "@/features/management/mutations";
 import { useToast } from "@/composables/useToast";
@@ -126,63 +127,40 @@ const formatDate = (date: string) => new Date(date).toLocaleDateString("vi-VN");
             </table>
         </div>
 
-        <div
-            v-if="showModal"
-            class="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-            @click.self="showModal = false"
+        <BaseModal
+            :isOpen="showModal"
+            title="Thêm Độc Giả Mới"
+            headerClass="bg-yellow-300"
+            @close="showModal = false"
         >
-            <div class="bg-white border-4 border-black shadow-neo w-full max-w-2xl animate-in">
-                <div class="bg-yellow-300 p-4 border-b-4 border-black font-black uppercase text-xl">
-                    Thêm Độc Giả Mới
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <NeoInput id="ho" label="Họ Lót" v-model="form.hoLot" />
+                    <NeoInput id="ten" label="Tên" v-model="form.ten" />
                 </div>
-                <div class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
-                    <div class="grid grid-cols-2 gap-4">
-                        <NeoInput id="ho" label="Họ Lót" v-model="form.hoLot" />
-                        <NeoInput id="ten" label="Tên" v-model="form.ten" />
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <NeoInput id="dob" label="Ngày sinh" type="date" v-model="form.ngaySinh" />
-                        <NeoSelect
-                            id="gender"
-                            label="Giới tính"
-                            :options="genderOptions"
-                            v-model="form.gioiTinh"
-                        />
-                    </div>
-                    <NeoInput id="phone" label="Số điện thoại" v-model="form.soDienThoai" />
-                    <NeoInput id="address" label="Địa chỉ" v-model="form.diaChi" />
-                    <NeoInput id="pass" label="Mật khẩu" type="password" v-model="form.matKhau" />
+                <div class="grid grid-cols-2 gap-4">
+                    <NeoInput id="dob" label="Ngày sinh" type="date" v-model="form.ngaySinh" />
+                    <NeoSelect
+                        id="gender"
+                        label="Giới tính"
+                        :options="genderOptions"
+                        v-model="form.gioiTinh"
+                    />
+                </div>
+                <NeoInput id="phone" label="Số điện thoại" v-model="form.soDienThoai" />
+                <NeoInput id="address" label="Địa chỉ" v-model="form.diaChi" />
+                <NeoInput id="pass" label="Mật khẩu" type="password" v-model="form.matKhau" />
 
-                    <div class="flex justify-end gap-3 pt-4">
-                        <button
-                            @click="showModal = false"
-                            class="px-4 py-2 font-bold hover:underline"
-                        >
-                            Hủy
-                        </button>
-                        <NeoButton @click="handleCreate" :disabled="isPending">
-                            <Loader2 v-if="isPending" class="animate-spin" />
-                            <span v-else>Tạo Tài Khoản</span>
-                        </NeoButton>
-                    </div>
+                <div class="flex justify-end gap-3 pt-4 border-t-2 border-black">
+                    <NeoButton type="button" variant="secondary" @click="showModal = false">
+                        Hủy
+                    </NeoButton>
+                    <NeoButton @click="handleCreate" :disabled="isPending">
+                        <Loader2 v-if="isPending" class="animate-spin" />
+                        <span v-else>Tạo Tài Khoản</span>
+                    </NeoButton>
                 </div>
             </div>
-        </div>
+        </BaseModal>
     </div>
 </template>
-
-<style scoped>
-.animate-in {
-    animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-@keyframes popIn {
-    from {
-        opacity: 0;
-        transform: scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-</style>

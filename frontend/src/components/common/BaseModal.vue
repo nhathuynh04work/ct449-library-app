@@ -28,7 +28,8 @@
                             class="w-full max-w-2xl transform overflow-hidden bg-white text-left align-middle shadow-neo border-4 border-black transition-all"
                         >
                             <div
-                                class="bg-yellow-300 border-b-4 border-black p-4 flex justify-between items-center"
+                                class="border-b-4 border-black p-4 flex justify-between items-center"
+                                :class="headerClass || 'bg-yellow-300'"
                             >
                                 <DialogTitle
                                     as="h3"
@@ -62,6 +63,7 @@ import { X } from "lucide-vue-next";
 defineProps<{
     isOpen: boolean;
     title: string;
+    headerClass?: string;
 }>();
 
 const emit = defineEmits(["close"]);

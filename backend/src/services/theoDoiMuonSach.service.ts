@@ -1,6 +1,6 @@
 import { TrangThaiBanSao } from "@/constants/trangThaiBanSao.js";
-import { NotFoundException } from "@/errors/not-found.js";
 import { BadRequestException } from "@/errors/bad-request.js";
+import { NotFoundException } from "@/errors/not-found.js";
 import { BanSao } from "@/models/BanSao.js";
 import {
 	TheoDoiMuonSach,
@@ -51,17 +51,19 @@ export async function updateLoanStatus(id: string, status: TrangThaiMuonType) {
 			status === TrangThaiMuon.DANG_MUON &&
 			previousStatus === TrangThaiMuon.DANG_CHO
 		) {
-			// [Swap Logic from previous step kept here]
+			// Try to lock the specific copy requested
 			let updatedCopy = await BanSao.findOneAndUpdate(
 				{ _id: loan.banSao, trangThai: TrangThaiBanSao.AVAILABLE },
 				{ trangThai: TrangThaiBanSao.BORROWED },
 				{ session, new: true }
 			);
 
+			// If the specific copy is no longer available, try to find a substitute
 			if (!updatedCopy) {
 				const currentCopyInfo = await BanSao.findById(
 					loan.banSao
 				).session(session);
+
 				if (!currentCopyInfo)
 					throw new BadRequestException("Dữ liệu bản sao lỗi.");
 
@@ -78,11 +80,13 @@ export async function updateLoanStatus(id: string, status: TrangThaiMuonType) {
 
 				substituteCopy.trangThai = TrangThaiBanSao.BORROWED;
 				await substituteCopy.save({ session });
+
+				// Update loan to point to the new copy
 				loan.banSao = substituteCopy._id as any;
 			}
 
 			const now = new Date();
-			const dueDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+			const dueDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000); // 14 days
 
 			loan.ngayMuon = now;
 			loan.hanTra = dueDate;
@@ -94,6 +98,7 @@ export async function updateLoanStatus(id: string, status: TrangThaiMuonType) {
 			status === TrangThaiMuon.DA_TU_CHOI ||
 			status === TrangThaiMuon.DA_HUY
 		) {
+			// If it was currently borrowed, free up the copy
 			if (previousStatus === TrangThaiMuon.DANG_MUON) {
 				await BanSao.findByIdAndUpdate(
 					loan.banSao,
@@ -105,7 +110,7 @@ export async function updateLoanStatus(id: string, status: TrangThaiMuonType) {
 					const returnDate = new Date();
 					loan.ngayTra = returnDate;
 
-					// [LOGIC 3B]: Calculate Fine
+					// Calculate Fine if overdue
 					if (returnDate > loan.hanTra) {
 						const diffTime = Math.abs(
 							returnDate.getTime() - loan.hanTra.getTime()
@@ -114,7 +119,6 @@ export async function updateLoanStatus(id: string, status: TrangThaiMuonType) {
 							diffTime / (1000 * 60 * 60 * 24)
 						);
 
-						// Calculate fine
 						loan.tienPhat = diffDays * FINE_PER_DAY;
 					} else {
 						loan.tienPhat = 0;
@@ -141,6 +145,7 @@ export async function cancelLoanByUser(userId: string, loanId: string) {
 
 	if (!loan)
 		throw new NotFoundException("Không tìm thấy yêu cầu mượn sách này.");
+
 	if (loan.trangThai !== TrangThaiMuon.DANG_CHO) {
 		throw new BadRequestException(
 			"Chỉ có thể hủy yêu cầu khi đang chờ duyệt."
