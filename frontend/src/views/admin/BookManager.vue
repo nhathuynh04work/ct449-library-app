@@ -12,7 +12,7 @@ import {
     Image as ImageIcon,
 } from "lucide-vue-next";
 import NeoButton from "@/components/ui/NeoButton.vue";
-import NeoConfirmModal from "@/components/ui/NeoConfirmModal.vue";
+
 import BookForm from "./BookForm.vue";
 import CopyManagerModal from "./CopyManagerModal.vue";
 
@@ -26,7 +26,6 @@ const { mutate: deleteBook } = useDeleteBook();
 const { addToast } = useToast();
 
 const searchQuery = ref<string>("");
-const deleteId = ref<string | null>(null);
 
 const selectedBookForCopies = ref<{ id: string; title: string } | null>(null);
 const selectedBook = ref<Sach | undefined>(undefined);
@@ -64,17 +63,14 @@ const openCopyManager = (book: Sach) => {
     selectedBookForCopies.value = { id: book._id, title: book.tenSach };
 };
 
-const confirmDelete = () => {
-    if (!deleteId.value) return;
-
-    deleteBook(deleteId.value, {
+const handleDelete = (id: string) => {
+    deleteBook(id, {
         onSuccess: () => {
             addToast({
                 title: "Thành công",
                 description: "Đã xóa sách khỏi hệ thống.",
                 variant: "success",
             });
-            deleteId.value = null;
         },
         onError: (err) => {
             addToast({
@@ -82,7 +78,6 @@ const confirmDelete = () => {
                 description: err.message || "Không thể xóa sách.",
                 variant: "error",
             });
-            deleteId.value = null;
         },
     });
 };
@@ -262,7 +257,7 @@ const getCategoryColor = (index: number): string => {
                                         <Edit :size="18" />
                                     </button>
                                     <button
-                                        @click="deleteId = book._id"
+                                        @click="handleDelete(book._id)"
                                         class="p-2 bg-red-400 border-2 border-black shadow-neo-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none active:bg-red-500 transition-all text-black"
                                         title="Xóa"
                                     >
@@ -311,15 +306,6 @@ const getCategoryColor = (index: number): string => {
             :book-id="selectedBookForCopies.id"
             :book-title="selectedBookForCopies.title"
             @close="selectedBookForCopies = null"
-        />
-
-        <NeoConfirmModal
-            v-if="deleteId"
-            title="Xóa Sách"
-            description="Bạn có chắc chắn muốn xóa cuốn sách này? Hành động này không thể hoàn tác."
-            variant="danger"
-            @close="deleteId = null"
-            @confirm="confirmDelete"
         />
     </div>
 </template>

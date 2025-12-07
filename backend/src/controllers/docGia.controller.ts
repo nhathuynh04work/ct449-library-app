@@ -12,3 +12,9 @@ export async function getAllDocGia(req: Request, res: Response) {
 	const list = await docGiaService.getAllDocGia();
 	res.status(200).json(list);
 }
+
+export async function toggleBlock(req: Request, res: Response) {
+	const { id } = req.params as { id: string };
+	const result = await docGiaService.toggleBlockDocGia(id);
+	res.status(200).json(result);
+}

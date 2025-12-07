@@ -3,6 +3,7 @@ import { BadRequestException } from "@/errors/bad-request.js";
 import { ConflictException } from "@/errors/conflict.js";
 import { NotFoundException } from "@/errors/not-found.js";
 import { BanSao } from "@/models/BanSao.js";
+import { DocGia } from "@/models/DocGia.js"; // Import DocGia
 import { Sach, type ISach } from "@/models/Sach.js";
 import { TheoDoiMuonSach, TrangThaiMuon } from "@/models/TheoDoiMuonSach.js";
 import type {
@@ -127,6 +128,13 @@ export async function updateSach(id: string, payload: UpdateSachPayload) {
 }
 
 export async function deleteSach(id: string) {
+	const hasCopies = await BanSao.exists({ sach: id });
+	if (hasCopies) {
+		throw new ConflictException(
+			"Không thể xóa sách này vì vẫn còn bản sao trong kho."
+		);
+	}
+
 	const deletedSach = await Sach.findByIdAndDelete(id);
 
 	if (!deletedSach) {
@@ -142,6 +150,16 @@ export async function muonSach(params: { docGiaId: string; sachId: string }) {
 	session.startTransaction();
 
 	try {
+		// [NEW LOGIC]: Check if reader is blocked
+		const reader = await DocGia.findById(docGiaId).session(session);
+		if (!reader) throw new NotFoundException("Không tìm thấy độc giả.");
+
+		if (reader.biKhoa) {
+			throw new BadRequestException(
+				"Tài khoản của bạn đã bị khóa chức năng mượn sách. Vui lòng liên hệ thủ thư."
+			);
+		}
+
 		// [LOGIC 1A]: Check Borrow Limit (Max 5 books)
 		const MAX_BORROW_LIMIT = 5;
 		const currentLoansCount = await TheoDoiMuonSach.countDocuments({

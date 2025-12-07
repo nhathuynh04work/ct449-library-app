@@ -1,5 +1,7 @@
 import { NotFoundException } from "@/errors/not-found.js";
+import { ConflictException } from "@/errors/conflict.js";
 import { DanhMuc } from "@/models/DanhMuc.js";
+import { Sach } from "@/models/Sach.js";
 import type {
 	CreateDanhMucPayload,
 	UpdateDanhMucPayload,
@@ -46,6 +48,13 @@ export async function updateDanhMuc(id: string, payload: UpdateDanhMucPayload) {
 }
 
 export async function deleteDanhMuc(id: string) {
+	const isUsed = await Sach.exists({ danhMuc: id });
+	if (isUsed) {
+		throw new ConflictException(
+			"Không thể xóa danh mục này vì vẫn còn sách thuộc về nó."
+		);
+	}
+
 	const deletedDanhMuc = await DanhMuc.findByIdAndDelete(id);
 
 	if (!deletedDanhMuc) {

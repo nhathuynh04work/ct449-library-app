@@ -11,6 +11,7 @@ export interface IDocGia {
 	matKhau: string;
 	diaChi: string;
 	soDienThoai: string;
+	biKhoa?: boolean;
 
 	createdAt?: Date;
 	updatedAt?: Date;
@@ -53,6 +54,11 @@ const docGiaSchema = new Schema<IDocGia>(
 			type: String,
 			required: true,
 			select: false,
+		},
+
+		biKhoa: {
+			type: Boolean,
+			default: false,
 		},
 	},
 	{ timestamps: true }

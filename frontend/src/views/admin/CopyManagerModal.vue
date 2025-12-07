@@ -35,9 +35,15 @@ const handleAddCopy = () => {
 };
 
 const handleDelete = (id: string) => {
-    if (!confirm("Xóa bản sao này?")) return;
     deleteCopy.mutate(id, {
         onSuccess: () => addToast({ title: "Đã xóa", variant: "info" }),
+        onError: (err) => {
+            addToast({
+                title: "Lỗi xóa bản sao",
+                description: err.message,
+                variant: "error",
+            });
+        },
     });
 };
 

@@ -1,5 +1,7 @@
 import { NotFoundException } from "@/errors/not-found.js";
+import { ConflictException } from "@/errors/conflict.js";
 import { BanSao } from "@/models/BanSao.js";
+import { TrangThaiBanSao } from "@/constants/trangThaiBanSao.js";
 import type {
 	CreateBanSaoPayload,
 	UpdateBanSaoPayload,
@@ -50,11 +52,15 @@ export async function updateBanSao(
 }
 
 export async function deleteBanSao(banSaoId: string) {
-	const deletedBanSao = await BanSao.findByIdAndDelete(banSaoId);
-
-	if (!deletedBanSao) {
+	const existingBanSao = await BanSao.findById(banSaoId);
+	if (!existingBanSao) {
 		throw new NotFoundException("Không tìm thấy bản sao.");
 	}
 
-	return deletedBanSao.toObject();
+	if (existingBanSao.trangThai === TrangThaiBanSao.BORROWED) {
+		throw new ConflictException("Không thể xóa bản sao đang được mượn.");
+	}
+
+	const deletedBanSao = await BanSao.findByIdAndDelete(banSaoId);
+	return deletedBanSao?.toObject();
 }

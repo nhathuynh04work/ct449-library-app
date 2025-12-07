@@ -14,7 +14,7 @@ import {
 import NeoButton from "@/components/ui/NeoButton.vue";
 import NeoInput from "@/components/ui/NeoInput.vue";
 import BaseModal from "@/components/common/BaseModal.vue";
-import NeoConfirmModal from "@/components/ui/NeoConfirmModal.vue";
+
 import { useAuthors, usePublishers, useCategories } from "@/features/resources/queries";
 import {
     useCreateAuthor,
@@ -56,7 +56,6 @@ const deleteCategory = useDeleteCategory();
 const showModal = ref(false);
 const isEditMode = ref(false);
 const editingId = ref<string | null>(null);
-const deleteId = ref<string | null>(null);
 
 const formData = ref({
     name: "",
@@ -128,10 +127,10 @@ const handleSubmit = () => {
         showModal.value = false;
     };
 
-    const onError = () => {
+    const onError = (err: Error) => {
         addToast({
             title: "Lỗi",
-            description: "Không thể thực hiện thao tác.",
+            description: err.message || "Không thể thực hiện thao tác.",
             variant: "error",
         });
     };
@@ -184,18 +183,22 @@ const handleSubmit = () => {
     }
 };
 
-const confirmDelete = () => {
-    if (!deleteId.value) return;
-
+const handleDelete = (id: string) => {
     const onSuccess = () => {
         addToast({ title: "Đã xóa", variant: "info" });
-        deleteId.value = null;
     };
 
-    if (activeTab.value === "AUTHORS") deleteAuthor.mutate(deleteId.value, { onSuccess });
-    else if (activeTab.value === "PUBLISHERS")
-        deletePublisher.mutate(deleteId.value, { onSuccess });
-    else deleteCategory.mutate(deleteId.value, { onSuccess });
+    const onError = (err: Error) => {
+        addToast({
+            title: "Không thể xóa",
+            description: err.message,
+            variant: "error",
+        });
+    };
+
+    if (activeTab.value === "AUTHORS") deleteAuthor.mutate(id, { onSuccess, onError });
+    else if (activeTab.value === "PUBLISHERS") deletePublisher.mutate(id, { onSuccess, onError });
+    else deleteCategory.mutate(id, { onSuccess, onError });
 };
 
 const getThemeColor = (type: "bg" | "border" | "hover") => {
@@ -221,17 +224,13 @@ const getModalTitle = computed(() => {
     }
 });
 
-// Helper to generate precise classes for tabs
 const getTabButtonClass = (tabName: Tab) => {
     const isActive = activeTab.value === tabName;
     const base =
         "px-6 py-3 font-black uppercase transition-all flex items-center gap-2 border-4 border-black relative -bottom-2 whitespace-nowrap";
-
-    // Inactive: White bg, shadow, move on hover
     const inactive =
         "bg-white hover:translate-y-[-2px] active:translate-y-[0px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:shadow-none";
 
-    // Active: Colored bg, no shadow, lifted up, z-index to cover border
     let activeColor = "";
     if (tabName === "AUTHORS") activeColor = "bg-yellow-300";
     else if (tabName === "PUBLISHERS") activeColor = "bg-blue-300";
@@ -374,7 +373,7 @@ const getTabButtonClass = (tabName: Tab) => {
                                         <Edit :size="18" />
                                     </button>
                                     <button
-                                        @click="deleteId = item._id"
+                                        @click="handleDelete(item._id)"
                                         class="p-2 bg-red-400 border-2 border-black shadow-neo-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all active:bg-red-500"
                                     >
                                         <Trash2 :size="18" />
@@ -415,7 +414,7 @@ const getTabButtonClass = (tabName: Tab) => {
                                         <Edit :size="18" />
                                     </button>
                                     <button
-                                        @click="deleteId = item._id"
+                                        @click="handleDelete(item._id)"
                                         class="p-2 bg-red-400 border-2 border-black shadow-neo-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all active:bg-red-500"
                                     >
                                         <Trash2 :size="18" />
@@ -457,7 +456,7 @@ const getTabButtonClass = (tabName: Tab) => {
                                         <Edit :size="18" />
                                     </button>
                                     <button
-                                        @click="deleteId = item._id"
+                                        @click="handleDelete(item._id)"
                                         class="p-2 bg-red-400 border-2 border-black shadow-neo-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all active:bg-red-500"
                                     >
                                         <Trash2 :size="18" />
@@ -520,14 +519,5 @@ const getTabButtonClass = (tabName: Tab) => {
                 </div>
             </div>
         </BaseModal>
-
-        <NeoConfirmModal
-            v-if="deleteId"
-            title="Xóa Dữ Liệu"
-            description="Bạn có chắc chắn muốn xóa mục này? Hành động này không thể hoàn tác và có thể ảnh hưởng đến các sách liên quan."
-            variant="danger"
-            @close="deleteId = null"
-            @confirm="confirmDelete"
-        />
     </div>
 </template>

@@ -20,3 +20,13 @@ export function useCreateReader() {
         },
     });
 }
+
+export function useToggleBlockReader() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: managementApi.toggleBlockReader,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["readers"] });
+        },
+    });
+}

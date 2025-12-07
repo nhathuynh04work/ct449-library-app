@@ -1,5 +1,7 @@
 import { NotFoundException } from "@/errors/not-found.js";
+import { ConflictException } from "@/errors/conflict.js";
 import { NhaXuatBan } from "@/models/NhaXuatBan.js";
+import { Sach } from "@/models/Sach.js";
 import type {
 	CreateNhaXuatBanPayload,
 	UpdateNhaXuatBanPayload,
@@ -49,6 +51,13 @@ export async function updateNhaXuatBan(
 }
 
 export async function deleteNhaXuatBan(id: string) {
+	const isUsed = await Sach.exists({ nhaXuatBan: id });
+	if (isUsed) {
+		throw new ConflictException(
+			"Không thể xóa nhà xuất bản này vì vẫn còn sách thuộc về nó."
+		);
+	}
+
 	const deletedNXB = await NhaXuatBan.findByIdAndDelete(id);
 
 	if (!deletedNXB) {

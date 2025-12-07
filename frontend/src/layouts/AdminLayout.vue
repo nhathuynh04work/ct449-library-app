@@ -52,8 +52,14 @@ const isAdmin = computed(() => currentUser.value?.chucVu === "ADMIN");
 
 const visibleNavItems = computed(() => {
     const items = [...navItems];
-    if (isAdmin.value) {
+
+    // Show Readers for both Admin and Librarian
+    if (isAdmin.value || currentUser.value?.chucVu === "LIBRARIAN") {
         items.push({ name: "admin-readers", label: "Độc giả", icon: Users });
+    }
+
+    // Only Admin sees Employees
+    if (isAdmin.value) {
         items.push({ name: "admin-employees", label: "Nhân viên", icon: Settings });
     }
     return items;

@@ -22,6 +22,10 @@ export const managementApi = {
         const { data } = await api.post("/docgia", payload);
         return data;
     },
+    toggleBlockReader: async (id: string): Promise<DocGia> => {
+        const { data } = await api.patch(`/docgia/${id}/block`);
+        return data;
+    },
 
     getDashboardStats: async () => {
         const { data } = await api.get("/dashboard/stats");
